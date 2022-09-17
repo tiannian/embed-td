@@ -1,7 +1,7 @@
-use std::{collections::HashMap, env, path::Path, fs};
+use std::{collections::HashMap, env, fs, path::Path};
 
 use flate2::read::GzDecoder;
-use sha2::{Sha256, Digest};
+use sha2::{Digest, Sha256};
 use tar::Archive;
 
 fn check_and_download(td_name: &str, version: &str) {

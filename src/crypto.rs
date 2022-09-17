@@ -1,11 +1,15 @@
 use crate::model;
-use k256::ecdsa;
+use k256::{
+    ecdsa,
+    sha2::{Digest, Sha256},
+};
+use ripemd::Ripemd160;
 
-enum SecretKey {
-    Secp256k1(k256::ecdsa::VerifyingKey),
+enum SecretKey<'a> {
+    Secp256k1(&'a k256::ecdsa::SigningKey),
 }
 
-impl SecretKey {
+impl<'a> SecretKey<'a> {
     pub fn to_key(&self) -> model::Key {
         match self {
             Self::Secp256k1(k) => {
@@ -18,11 +22,11 @@ impl SecretKey {
     }
 }
 
-enum PublicKey {
-    Secp256k1(k256::ecdsa::SigningKey),
+enum PublicKey<'a> {
+    Secp256k1(&'a k256::ecdsa::VerifyingKey),
 }
 
-impl PublicKey {
+impl<'a> PublicKey<'a> {
     pub fn to_key(&self) -> model::Key {
         match self {
             Self::Secp256k1(k) => {
@@ -30,6 +34,20 @@ impl PublicKey {
                 let value = base64::encode(k.to_bytes());
 
                 model::Key { ty, value }
+            }
+        }
+    }
+
+    pub fn address(&self) -> String {
+        match self {
+            Self::Secp256k1(k) => {
+                let bytes = k.to_bytes();
+
+                let step1_sha = Sha256::digest(bytes);
+
+                let res = Ripemd160::digest(step1_sha);
+
+                hex::encode(res)
             }
         }
     }
@@ -44,4 +62,27 @@ pub enum Keypair {
     Secp256k1(SPKey<ecdsa::SigningKey, ecdsa::VerifyingKey>),
 }
 
-impl Keypair {}
+impl Keypair {
+    pub fn to_serde(&self) -> model::Keypair {
+        match self {
+            Self::Secp256k1(sp) => {
+                let s = &sp.secret_key;
+                let p = &sp.public_key;
+
+                let sk = SecretKey::Secp256k1(s);
+                let pk = PublicKey::Secp256k1(p);
+
+                let address = pk.address();
+                let pub_key = pk.to_key();
+
+                let priv_key = sk.to_key();
+
+                model::Keypair {
+                    address,
+                    priv_key,
+                    pub_key,
+                }
+            }
+        }
+    }
+}
