@@ -19,7 +19,13 @@ fn check_and_download(td_name: &str, version: &str) {
     let out_path = Path::new(&out_file);
 
     if out_path.exists() {
-        if check(&out_file, &filename) {}
+        if check(&out_file, &filename) {
+            return;
+        }
+    } else {
+        download(&url, &out_file);
+
+        assert!(check(&out_file, &filename), "Checksum failed.");
     }
 }
 
