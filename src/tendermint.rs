@@ -1,4 +1,4 @@
-use std::{path::PathBuf, fs, io::Write};
+use std::io::Write;
 
 use rust_embed::RustEmbed;
 use tempfile::NamedTempFile;
