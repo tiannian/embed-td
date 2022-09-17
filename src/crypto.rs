@@ -3,6 +3,7 @@ use k256::{
     ecdsa,
     sha2::{Digest, Sha256},
 };
+use rand_core::{CryptoRng, RngCore};
 use ripemd::Ripemd160;
 
 enum SecretKey<'a> {
@@ -58,6 +59,10 @@ pub struct SPKey<S, P> {
     public_key: P,
 }
 
+pub enum KeypairType {
+    Secp256k1,
+}
+
 pub enum Keypair {
     Secp256k1(SPKey<ecdsa::SigningKey, ecdsa::VerifyingKey>),
 }
@@ -84,5 +89,39 @@ impl Keypair {
                 }
             }
         }
+    }
+
+    pub fn generate(ty: KeypairType, rng: impl RngCore + CryptoRng) -> Self {
+        match ty {
+            KeypairType::Secp256k1 => {
+                let secret_key = ecdsa::SigningKey::random(rng);
+                let public_key = secret_key.verifying_key();
+
+                let sp = SPKey {
+                    secret_key,
+                    public_key,
+                };
+
+                Self::Secp256k1(sp)
+            }
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Keypair, KeypairType};
+
+    #[test]
+    fn generate_secp256k1() {
+        let rng = rand::thread_rng();
+
+        let keypair = Keypair::generate(KeypairType::Secp256k1, rng);
+
+        let kp_serde = keypair.to_serde();
+
+        let s = serde_json::to_string_pretty(&kp_serde).unwrap();
+
+        println!("{}", s);
     }
 }
