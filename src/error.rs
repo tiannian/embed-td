@@ -7,6 +7,9 @@ pub enum Error {
 
     #[error(transparent)]
     StdIoError(#[from] std::io::Error),
+
+    #[error(transparent)]
+    Utf8Error(#[from] std::string::FromUtf8Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

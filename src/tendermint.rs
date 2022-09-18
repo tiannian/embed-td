@@ -1,9 +1,9 @@
-use std::io::Write;
+use std::{io::Write, process::Command};
 
 use rust_embed::RustEmbed;
-use tempfile::NamedTempFile;
+use tempfile::{NamedTempFile, TempPath};
 
-use crate::{Config, Error, Result};
+use crate::{Error, Result};
 
 #[derive(RustEmbed)]
 #[folder = "$OUT_DIR"]
@@ -12,42 +12,57 @@ pub(crate) struct TendermintEmbed;
 
 #[derive(Debug)]
 pub struct Tendermint {
-    binary_tempfile: NamedTempFile,
-    config: Config,
+    binary_tempfile: TempPath,
 }
 
 impl Tendermint {
-    pub fn new_with_config(config: Config) -> Result<Self> {
+    pub fn new() -> Result<Self> {
         let mut binary_tempfile = NamedTempFile::new()?;
 
         let ef = TendermintEmbed::get("tendermint").ok_or(Error::NoTendermint)?;
 
+        println!("len :{}", ef.data.len());
+
         binary_tempfile.write_all(&ef.data)?;
+
+        let binary_tempfile = binary_tempfile.into_temp_path();
+
+        #[cfg(unix)]
+        {
+            use std::{fs::{metadata, set_permissions}, os::unix::fs::PermissionsExt};
+
+            let mut permission = metadata(&binary_tempfile)?.permissions();
+            permission.set_mode(0o755);
+            set_permissions(&binary_tempfile, permission)?;
+        }
 
         Ok(Self {
             binary_tempfile,
-            config,
         })
     }
 
-    pub fn new() -> Result<Self> {
-        Ok(Self::new_with_config(Config::default())?)
+    pub fn version(&self) -> Result<String> {
+        let version = Command::new(&self.binary_tempfile).arg("version").output()?;
+
+        println!("{:?}", version);
+
+        let s = String::from_utf8(version.stdout)?;
+
+        Ok(String::from(s.trim()))
     }
 
-    /// Init tendermint based on config
-    pub fn init(&self) -> Result<()> {
+    pub fn start(&self) -> Result<()> {
         Ok(())
     }
+}
 
-    pub fn generate_validator(&self) -> Result<()> {
-        Ok(())
-    }
+#[cfg(test)]
+mod tests {
+    use crate::Tendermint;
 
-    pub fn generate_node_key(&self) -> Result<()> {
-        Ok(())
-    }
-
-    pub fn generate_genesis(&self) -> Result<()> {
-        Ok(())
+    #[test]
+    fn test_version() {
+        let td = Tendermint::new().unwrap();
+        assert_eq!(&td.version().unwrap(), "0.34.21")
     }
 }
