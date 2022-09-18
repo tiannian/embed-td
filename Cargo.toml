@@ -21,8 +21,9 @@ sha2 = "0.10.6"
 k256 = "0.11.5"
 ripemd = "0.1.2"
 
-# ed25519
+# ed25519 & sr25519
 curve25519-dalek-ng = "4.1.1"
+time = { version = "0.3.14", features = ["serde"] }
 
 [features]
 default = ["td_ver_0_34"]
