@@ -51,6 +51,9 @@ impl Tendermint {
         Ok(String::from(s.trim()))
     }
 
+    /// Start tendermint
+    ///
+    /// Pass ABCI, Config, NodeKey, ValidatorKey, Genesis
     pub fn start(&self) -> Result<()> {
         Ok(())
     }
