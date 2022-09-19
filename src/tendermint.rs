@@ -29,20 +29,23 @@ impl Tendermint {
 
         #[cfg(unix)]
         {
-            use std::{fs::{metadata, set_permissions}, os::unix::fs::PermissionsExt};
+            use std::{
+                fs::{metadata, set_permissions},
+                os::unix::fs::PermissionsExt,
+            };
 
             let mut permission = metadata(&binary_tempfile)?.permissions();
             permission.set_mode(0o755);
             set_permissions(&binary_tempfile, permission)?;
         }
 
-        Ok(Self {
-            binary_tempfile,
-        })
+        Ok(Self { binary_tempfile })
     }
 
     pub fn version(&self) -> Result<String> {
-        let version = Command::new(&self.binary_tempfile).arg("version").output()?;
+        let version = Command::new(&self.binary_tempfile)
+            .arg("version")
+            .output()?;
 
         println!("{:?}", version);
 

@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use time::{OffsetDateTime, Duration};
+use time::{Duration, OffsetDateTime};
 
 use super::Key;
 
@@ -59,7 +59,10 @@ pub struct BlockSize {
     pub max_gas: i64,
 
     /// This parameter has no value anymore in Tendermint-core
-    #[serde(with = "super::serializers::from_str", default = "BlockSize::default_time_iota_ms")]
+    #[serde(
+        with = "super::serializers::from_str",
+        default = "BlockSize::default_time_iota_ms"
+    )]
     pub time_iota_ms: i64,
 }
 
@@ -128,4 +131,3 @@ pub struct ValidatorInfo {
     #[serde(skip)]
     pub proposer_priority: i64,
 }
-
