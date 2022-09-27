@@ -18,6 +18,12 @@ pub struct Config {
     filter_peers: bool,
     rpc: Rpc,
     p2p: P2P,
+    mempool: Mempool,
+    statesync: StateSync,
+    fastsync: FastSync,
+    consensus: Consensus,
+    tx_index: TxIndex,
+    instrumentation: Instrumentation,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -67,4 +73,75 @@ pub struct P2P {
     allow_duplicate_ip: bool,
     handshake_timeout: String,
     dial_timeout: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Mempool {
+    version: String,
+    recheck: bool,
+    broadcast: bool,
+    wal_dir: String,
+    size: u64,
+    max_txs_bytes: u64,
+    cache_size: u64,
+    #[serde(rename = "keep-invalid-txs-in-cache")]
+    keep_invalid_txs_in_cache: bool,
+    max_tx_bytes: u64,
+    max_batch_bytes: u64,
+    #[serde(rename = "ttl-duration")]
+    ttl_duration: String,
+    #[serde(rename = "ttl-num-blocks")]
+    ttl_num_blocks: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StateSync {
+    enable: bool,
+    rpc_servers: String,
+    trust_height: u64,
+    trust_hash: String,
+    trust_period: String,
+    discovery_time: String,
+    temp_dir: String,
+    chunk_request_timeout: String,
+    chunk_fetchers: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FastSync {
+    version: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Consensus {
+    wal_file: String,
+    timeout_propose: String,
+    timeout_propose_delta: String,
+    timeout_prevote: String,
+    timeout_prevote_delta: String,
+    timeout_precommit: String,
+    timeout_precommit_delta: String,
+    timeout_commit: String,
+    double_sign_check_height: u64,
+    skip_timeout_commit: bool,
+    create_empty_blocks: bool,
+    create_empty_blocks_interval: String,
+    peer_gossip_sleep_duration: String,
+    peer_query_maj23_sleep_duration: String,
+    discard_abci_responses: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct TxIndex {
+    indexer: String,
+    #[serde(rename = "pgsql-conn")]
+    pgsql_conn: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Instrumentation {
+    prometheus: bool,
+    prometheus_listen_addr: String,
+    max_open_connections: u64,
+    namespace: String,
 }
