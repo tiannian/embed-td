@@ -1,35 +1,35 @@
-use std::{collections::HashMap, env, fs, io::Read, path::Path, process::Command};
+use std::{env, fs, path::Path, process::Command};
 
 use flate2::read::GzDecoder;
-use sha2::{digest::Output, Digest, Sha256};
+// use sha2::{digest::Output, Digest, Sha256};
 use tar::Archive;
 
-pub struct DigestReader<R, D> {
-    reader: R,
-    digester: D,
-}
-
-impl<R: Read, D: Digest + Clone> DigestReader<R, D> {
-    pub fn new(reader: R, digester: D) -> Self {
-        Self { reader, digester }
-    }
-
-    pub fn digest(&mut self) -> Output<D> {
-        self.digester.clone().finalize()
-    }
-}
-
-impl<R: Read, D: Digest> Read for DigestReader<R, D> {
-    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
-        let len = self.reader.read(buf)?;
-
-        println!("{}", len);
-
-        self.digester.update(buf);
-
-        Ok(len)
-    }
-}
+/* pub struct DigestReader<R, D> { */
+/*     reader: R, */
+/*     digester: D, */
+/* } */
+/*  */
+/* impl<R: Read, D: Digest + Clone> DigestReader<R, D> { */
+/*     pub fn new(reader: R, digester: D) -> Self { */
+/*         Self { reader, digester } */
+/*     } */
+/*  */
+/*     pub fn digest(&mut self) -> Output<D> { */
+/*         self.digester.clone().finalize() */
+/*     } */
+/* } */
+/*  */
+/* impl<R: Read, D: Digest> Read for DigestReader<R, D> { */
+/*     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> { */
+/*         let len = self.reader.read(buf)?; */
+/*  */
+/*         println!("{}", len); */
+/*  */
+/*         self.digester.update(buf); */
+/*  */
+/*         Ok(len) */
+/*     } */
+/* } */
 
 fn check_and_download(td_name: &str, version: &str) {
     let out_dir = env::var("OUT_DIR").unwrap();
@@ -98,9 +98,9 @@ fn download(platform: &str, version: &str, target: &str) {
 
     let body = reqwest::blocking::get(url).unwrap();
 
-    let digester = DigestReader::new(body, Sha256::new());
+    // let digester = DigestReader::new(body, Sha256::new());
 
-    let decoder = GzDecoder::new(digester);
+    let decoder = GzDecoder::new(body);
 
     let mut archive = Archive::new(decoder);
 
