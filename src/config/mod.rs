@@ -10,6 +10,21 @@ pub use db_backend::*;
 mod p2p;
 pub use p2p::*;
 
+mod mempool;
+pub use mempool::*;
+
+mod state_sync;
+pub use state_sync::*;
+
+mod consensus;
+pub use consensus::*;
+
+mod tx_index;
+pub use tx_index::*;
+
+mod prometheus;
+pub use prometheus::*;
+
 /// Config for tendermint
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -34,6 +49,43 @@ pub struct Config {
 
     /// pprof listen addr. Useful to debug tendermint.
     pub pprof_laddr: String,
+
+    /// P2P config
+    pub p2p: P2PConfig,
+
+    /// Mempool config
+    pub mempool: MempoolConfig,
+
+    /// State sync rapidly bootstraps a new node by discovering, fetching, and restoring a state machine
+    /// snapshot from peers instead of fetching and replaying historical blocks. Requires some peers in
+    /// the network to take and serve state machine snapshots. State sync is not attempted if the node
+    /// has any local state (LastBlockHeight > 0). The node will have a truncated block history,
+    /// starting from the height of the snapshot.
+    pub state_sync: Option<StateSyncConfig>,
+
+    /// Version of fast sync.
+    pub fast_sync: FastSyncVersion,
+
+    /// Consensus config
+    pub consensus: ConsensusConfig,
+
+    /// What indexer to use for transactions
+    ///
+    /// The application will set which txs to index. In some cases a node operator will be able
+    /// to decide which txs to index based on configuration set in the application.
+    ///
+    /// Options:
+    ///   1) "null"
+    ///   2) "kv" (default) - the simplest possible indexer, backed by key-value storage (defaults to levelDB; see DBBackend).
+    /// 		- When "kv" is chosen "tx.height" and "tx.hash" will always be indexed.
+    ///   3) "psql" - the indexer services backed by PostgreSQL.
+    /// When "kv" or "psql" is chosen "tx.height" and "tx.hash" will always be indexed.
+    pub tx_index: TxIndexConfig,
+
+    /// When true, Prometheus metrics are served under /metrics on
+    /// PrometheusListenAddr.
+    /// Check out the documentation for the list of available metrics.
+    pub prometheus: Option<PrometheusConfig>,
 }
 
 impl Default for Config {
@@ -48,6 +100,13 @@ impl Default for Config {
             priv_validator_laddr: Default::default(),
             filter_peers: false,
             pprof_laddr: Default::default(),
+            p2p: Default::default(),
+            mempool: Default::default(),
+            state_sync: None,
+            fast_sync: Default::default(),
+            consensus: Default::default(),
+            tx_index: Default::default(),
+            prometheus: None,
         }
     }
 }
@@ -95,4 +154,8 @@ impl Config {
     define_build_mode_setter!(priv_validator_laddr, str);
 
     define_build_mode_setter!(filter_peers, bool);
+
+    define_build_mode_setter!(p2p, P2PConfig);
+
+    define_build_mode_setter!(mempool, MempoolConfig);
 }

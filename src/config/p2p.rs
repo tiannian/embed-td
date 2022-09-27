@@ -2,8 +2,8 @@ use time::Duration;
 
 use crate::define_build_mode_setter;
 
-#[derive(Debug, Default, Clone)]
-pub struct P2P {
+#[derive(Debug, Clone)]
+pub struct P2PConfig {
     /// Address to listen for incoming connections.
     pub laddr: String,
 
@@ -70,9 +70,69 @@ pub struct P2P {
     pub dial_timeout: Duration,
 }
 
-impl P2P {
+impl Default for P2PConfig {
+    fn default() -> Self {
+        Self {
+            laddr: String::from("tcp://0.0.0.0:26656"),
+            external_address: Default::default(),
+            seeds: Default::default(),
+            persistent_peers: Default::default(),
+            upnp: false,
+            local_net: false,
+            max_num_inbound_peers: 40,
+            max_num_outbound_peers: 10,
+            unconditional_peer_ids: Default::default(),
+            persistent_peers_max_dial_period: Duration::new(0, 0),
+            flush_throttle_timeout: Duration::milliseconds(100),
+            max_packet_msg_payload_size: 1024,
+            send_rate: 5120000,
+            recv_rate: 5120000,
+            pex: true,
+            seed_mode: false,
+            private_peer_ids: Default::default(),
+            allow_duplicate_ip: Default::default(),
+            handshake_timeout: Duration::new(20, 0),
+            dial_timeout: Duration::new(3, 0),
+        }
+    }
+}
+
+impl P2PConfig {
     define_build_mode_setter!(laddr, str);
 
     define_build_mode_setter!(external_address, str);
-}
 
+    define_build_mode_setter!(seeds, Vec<String>);
+
+    define_build_mode_setter!(persistent_peers, Vec<String>);
+
+    define_build_mode_setter!(upnp, bool);
+
+    define_build_mode_setter!(local_net, bool);
+
+    define_build_mode_setter!(max_num_inbound_peers, u64);
+
+    define_build_mode_setter!(max_num_outbound_peers, u64);
+
+    define_build_mode_setter!(unconditional_peer_ids, Vec<String>);
+
+    define_build_mode_setter!(persistent_peers_max_dial_period, Duration);
+
+    define_build_mode_setter!(flush_throttle_timeout, Duration);
+
+    define_build_mode_setter!(send_rate, u64);
+
+    define_build_mode_setter!(recv_rate, u64);
+
+    define_build_mode_setter!(pex, bool);
+
+    define_build_mode_setter!(seed_mode, bool);
+
+    define_build_mode_setter!(private_peer_ids, Vec<String>);
+
+    define_build_mode_setter!(allow_duplicate_ip, bool);
+
+    define_build_mode_setter!(handshake_timeout, Duration);
+
+    define_build_mode_setter!(dial_timeout, Duration);
+}
