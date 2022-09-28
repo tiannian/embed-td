@@ -1,5 +1,7 @@
 use time::Duration;
 
+use crate::define_build_mode_setter;
+
 #[derive(Debug, Clone)]
 pub struct ConsensusConfig {
     /// How long we wait for a proposal block before prevoting nil
@@ -62,4 +64,34 @@ impl Default for ConsensusConfig {
             discard_abci_responses: false,
         }
     }
+}
+
+impl ConsensusConfig {
+    define_build_mode_setter!(timeout_commit, Duration);
+
+    define_build_mode_setter!(timeout_propose, Duration);
+
+    define_build_mode_setter!(timeout_propose_delta, Duration);
+
+    define_build_mode_setter!(timeout_prevote, Duration);
+
+    define_build_mode_setter!(timeout_prevote_delta, Duration);
+
+    define_build_mode_setter!(timeout_precommit, Duration);
+
+    define_build_mode_setter!(timeout_precommit_delta, Duration);
+
+    define_build_mode_setter!(double_sign_check_height, u64);
+
+    define_build_mode_setter!(skip_timeout_commit, bool);
+
+    define_build_mode_setter!(create_empty_blocks, bool);
+
+    define_build_mode_setter!(create_empty_blocks_interval, Duration);
+
+    define_build_mode_setter!(peer_gossip_sleep_duration, Duration);
+
+    define_build_mode_setter!(peer_query_maj23_sleep_duration, Duration);
+
+    define_build_mode_setter!(discard_abci_responses, bool);
 }

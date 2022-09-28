@@ -64,7 +64,7 @@ pub struct Config {
     pub state_sync: Option<StateSyncConfig>,
 
     /// Version of fast sync.
-    pub fast_sync: FastSyncVersion,
+    pub fast_sync: Option<FastSyncVersion>,
 
     /// Consensus config
     pub consensus: ConsensusConfig,
@@ -77,7 +77,6 @@ pub struct Config {
     /// Options:
     ///   1) "null"
     ///   2) "kv" (default) - the simplest possible indexer, backed by key-value storage (defaults to levelDB; see DBBackend).
-    /// 		- When "kv" is chosen "tx.height" and "tx.hash" will always be indexed.
     ///   3) "psql" - the indexer services backed by PostgreSQL.
     /// When "kv" or "psql" is chosen "tx.height" and "tx.hash" will always be indexed.
     pub tx_index: TxIndexConfig,
@@ -140,6 +139,13 @@ macro_rules! define_build_mode_setter {
             this
         }
     };
+    ($name:ident, $type:ty, option, $enable: ident) => {
+        pub fn $enable(self, $name: $type) -> Self {
+            let mut this = self;
+            this.$name = Some($name);
+            this
+        }
+    };
 }
 
 impl Config {
@@ -158,4 +164,14 @@ impl Config {
     define_build_mode_setter!(p2p, P2PConfig);
 
     define_build_mode_setter!(mempool, MempoolConfig);
+
+    define_build_mode_setter!(state_sync, StateSyncConfig, option, enable_state_sync);
+
+    define_build_mode_setter!(fast_sync, FastSyncVersion, option, enable_fast_sync);
+
+    define_build_mode_setter!(consensus, ConsensusConfig);
+
+    define_build_mode_setter!(tx_index, TxIndexConfig);
+
+    define_build_mode_setter!(prometheus, PrometheusConfig, option, enabel_prometheus);
 }

@@ -1,3 +1,5 @@
+use crate::define_build_mode_setter;
+
 #[derive(Debug, Clone)]
 pub struct PrometheusConfig {
     /// Address to listen for Prometheus collector(s) connections
@@ -21,4 +23,12 @@ impl Default for PrometheusConfig {
             namespace: String::from("tendermint"),
         }
     }
+}
+
+impl PrometheusConfig {
+    define_build_mode_setter!(prometheus_listen_addr, str);
+
+    define_build_mode_setter!(max_open_connections, u64);
+
+    define_build_mode_setter!(namespace, str);
 }

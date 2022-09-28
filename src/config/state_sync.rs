@@ -1,5 +1,7 @@
 use time::Duration;
 
+use crate::define_build_mode_setter;
+
 #[derive(Debug, Clone)]
 pub struct StateSyncConfig {
     /// RPC servers (comma-separated) for light client verification of the synced state machine and
@@ -26,16 +28,30 @@ pub struct StateSyncConfig {
 
 impl Default for StateSyncConfig {
     fn default() -> Self {
-        let trust_period = Duration::hours(168);
-
         Self {
             rpc_servers: Default::default(),
             trust_height: 0,
             trust_hash: Default::default(),
-            trust_period,
+            trust_period: Duration::hours(168),
             discovery_time: Duration::new(15, 0),
             chunk_request_timeout: Duration::new(10, 0),
             chunk_fetchers: 4,
         }
     }
+}
+
+impl StateSyncConfig {
+    define_build_mode_setter!(rpc_servers, str);
+
+    define_build_mode_setter!(trust_height, u64);
+
+    define_build_mode_setter!(trust_hash, str);
+
+    define_build_mode_setter!(trust_period, Duration);
+
+    define_build_mode_setter!(discovery_time, Duration);
+
+    define_build_mode_setter!(chunk_request_timeout, Duration);
+
+    define_build_mode_setter!(chunk_fetchers, u64);
 }
