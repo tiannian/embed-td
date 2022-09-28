@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Config {
     proxy_app: String,
     moniker: String,
@@ -26,7 +26,7 @@ pub struct Config {
     instrumentation: Instrumentation,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Rpc {
     laddr: String,
     cors_allowed_origins: Vec<String>,
@@ -50,7 +50,7 @@ pub struct Rpc {
     pprof_laddr: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct P2P {
     laddr: String,
     external_address: String,
@@ -75,7 +75,7 @@ pub struct P2P {
     dial_timeout: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Mempool {
     version: String,
     recheck: bool,
@@ -94,7 +94,7 @@ pub struct Mempool {
     ttl_num_blocks: u64,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct StateSync {
     enable: bool,
     rpc_servers: String,
@@ -107,12 +107,12 @@ pub struct StateSync {
     chunk_fetchers: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct FastSync {
     version: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Consensus {
     wal_file: String,
     timeout_propose: String,
@@ -131,14 +131,14 @@ pub struct Consensus {
     discard_abci_responses: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct TxIndex {
     indexer: String,
     #[serde(rename = "pgsql-conn")]
     pgsql_conn: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Default)]
 pub struct Instrumentation {
     prometheus: bool,
     prometheus_listen_addr: String,

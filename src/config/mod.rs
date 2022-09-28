@@ -25,6 +25,8 @@ pub use tx_index::*;
 mod prometheus;
 pub use prometheus::*;
 
+use crate::model;
+
 /// Config for tendermint
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -174,4 +176,10 @@ impl Config {
     define_build_mode_setter!(tx_index, TxIndexConfig);
 
     define_build_mode_setter!(prometheus, PrometheusConfig, option, enabel_prometheus);
+}
+
+impl Config {
+    pub(crate) fn to_config_model(self) -> model::Config {
+        Default::default()
+    }
 }

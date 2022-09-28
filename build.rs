@@ -52,7 +52,7 @@ fn download(platform: &str, version: &str, target: &str) {
 fn main() {
     let target_triple = env::var("TARGET").unwrap();
 
-    let tts: Vec<&str> = target_triple.split("-").collect();
+    let tts: Vec<&str> = target_triple.split('-').collect();
 
     let arch = tts[0];
     let sys = tts[2];

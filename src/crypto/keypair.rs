@@ -105,7 +105,7 @@ pub enum Keypair {
 }
 
 impl Keypair {
-    pub fn to_serde(&self) -> model::Keypair {
+    pub(crate) fn to_serde(&self) -> model::Keypair {
         match self {
             Self::Secp256k1(s, p) => {
                 let sk = SecretKey::Secp256k1(s);
