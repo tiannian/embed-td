@@ -11,3 +11,5 @@ mod crypto;
 pub use crypto::*;
 
 pub mod model;
+
+pub(crate) mod defined;

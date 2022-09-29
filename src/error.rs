@@ -2,6 +2,9 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum Error {
+    #[error("path utf8 error")]
+    PathUtf8Error,
+
     #[error("No tendermint at this binary")]
     NoTendermint,
 

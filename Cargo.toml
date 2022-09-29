@@ -10,8 +10,11 @@ rust-embed = { version = "6.4.1", features = ["interpolate-folder-path", "includ
 tempfile = "3.3.0"
 thiserror = "1.0.35"
 
+time = { version = "0.3.14", features = ["serde"] }
+log = "0.4.17"
 rand_core = "0.6.4"
 serde = { version = "1.0.144", features = ["derive"] }
+
 base64 = "0.13.0"
 hex = { version = "0.4.3", features = ["serde"] }
 
@@ -26,7 +29,6 @@ ripemd = "0.1.2"
 
 # ed25519 & sr25519
 curve25519-dalek-ng = "4.1.1"
-time = { version = "0.3.14", features = ["serde"] }
 
 [features]
 default = ["td_ver_0_34"]

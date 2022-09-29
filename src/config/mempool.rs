@@ -1,6 +1,6 @@
 use time::Duration;
 
-use crate::define_build_mode_setter;
+use crate::{define_build_mode_setter, define_to_str_for_enum};
 
 #[derive(Debug, Clone, Default)]
 pub enum MempoolVersion {
@@ -8,6 +8,12 @@ pub enum MempoolVersion {
     FIFO,
     Priority,
 }
+
+define_to_str_for_enum!(
+    MempoolVersion,
+    FIFO => "v0",
+    Priority => "v1"
+);
 
 #[derive(Debug, Clone)]
 pub struct MempoolConfig {

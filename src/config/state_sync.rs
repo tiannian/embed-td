@@ -10,7 +10,7 @@ pub struct StateSyncConfig {
     ///
     /// For Cosmos SDK-based chains, trust_period should usually be about 2/3 of the unbonding time (~2
     /// weeks) during which they can be financially punished (slashed) for misbehavior.
-    pub rpc_servers: String,
+    pub rpc_servers: Vec<String>,
     pub trust_height: u64,
     pub trust_hash: String,
     pub trust_period: Duration,
@@ -41,7 +41,7 @@ impl Default for StateSyncConfig {
 }
 
 impl StateSyncConfig {
-    define_build_mode_setter!(rpc_servers, str);
+    define_build_mode_setter!(rpc_servers, Vec<String>);
 
     define_build_mode_setter!(trust_height, u64);
 

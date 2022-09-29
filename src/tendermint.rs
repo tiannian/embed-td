@@ -1,9 +1,14 @@
-use std::{io::Write, process::Command, path::PathBuf, fs::File};
+use std::{
+    fs::{self, File},
+    io::Write,
+    path::PathBuf,
+    process::Command,
+};
 
 use rust_embed::RustEmbed;
-use tempfile::{NamedTempFile, TempPath, TempDir, tempdir};
+use tempfile::{tempdir, NamedTempFile, TempDir};
 
-use crate::{Error, Result, Config, Keypair};
+use crate::{defined, Config, Error, Keypair, Result};
 
 #[derive(RustEmbed)]
 #[folder = "$OUT_DIR"]
@@ -27,19 +32,27 @@ impl Tendermint {
     }
 
     pub fn get_config_dir(&self) -> PathBuf {
-        self.work_dir.path().join("config")
+        self.work_dir.path().join(defined::CONFIG_DIR)
     }
 
     pub fn get_config_path(&self) -> PathBuf {
-        self.get_config_dir().join("config.toml")
+        self.work_dir.path().join(defined::CONFIG_FILE)
     }
 
     pub fn get_node_key_path(&self) -> PathBuf {
-        self.get_config_dir().join("node_key.json")
+        self.work_dir.path().join(defined::NODE_KEY_FILE)
     }
 
     pub fn get_validator_key_path(&self) -> PathBuf {
-        self.get_config_dir().join("priv_validator_key.json")
+        self.work_dir.path().join(defined::VALIDATOR_KEY_FILE)
+    }
+
+    pub fn get_socket_dir(&self) -> PathBuf {
+        self.work_dir.path().join(defined::SOCKET_DIR)
+    }
+
+    pub fn get_p2p_dir(&self) -> PathBuf {
+        self.work_dir.path().join(defined::P2P_DIR)
     }
 }
 
@@ -69,7 +82,9 @@ impl Tendermint {
             set_permissions(&bin_path, permission)?;
         }
 
-        // TODO: create some dir.
+        fs::create_dir_all(this.get_config_dir())?;
+        fs::create_dir_all(this.get_p2p_dir())?;
+        fs::create_dir_all(this.get_socket_dir())?;
 
         Ok(this)
     }
@@ -92,7 +107,8 @@ impl Tendermint {
     pub fn start(&self, config: Config, node_key: Keypair, validator_key: Keypair) -> Result<()> {
         let config_file = {
             let mut config_file = NamedTempFile::new_in(self.get_config_path())?;
-            let config_model = config.to_config_model();
+            let config_model = config
+                .into_config_model(self.work_dir.path().to_str().ok_or(Error::PathUtf8Error)?);
             let cs = toml::to_string_pretty(&config_model)?;
             config_file.write_all(&cs.into_bytes())?;
             config_file.into_temp_path()
