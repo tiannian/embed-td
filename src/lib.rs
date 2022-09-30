@@ -10,6 +10,9 @@ pub use error::*;
 mod crypto;
 pub use crypto::*;
 
+mod genesis;
+pub use genesis::*;
+
 pub mod model;
 
 pub(crate) mod defined;

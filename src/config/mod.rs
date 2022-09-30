@@ -193,7 +193,7 @@ impl Config {
 }
 
 impl Config {
-    pub(crate) fn into_config_model(self, base_dir: &str) -> model::Config {
+    pub(crate) fn into_model(self, base_dir: &str) -> model::Config {
         let rpc = {
             let laddr = format!("{}/{}", base_dir, defined::RPC_UNIX_SOCKET_FILE);
 

@@ -1,78 +1,70 @@
-use crate::model;
-use k256::ecdsa;
 use rand_core::{CryptoRng, RngCore};
 use ripemd::Ripemd160;
 use sha2::{Digest, Sha256};
 
-use super::{ed25519, sr25519};
+use crate::{ed25519, model, secp256k1, sr25519};
 
-enum SecretKey<'a> {
-    Secp256k1(&'a k256::ecdsa::SigningKey),
-    Ed25519(&'a [u8; 64]),
-    Sr25519(&'a [u8; 32]),
+pub enum SecretKey {
+    Ed25519(ed25519::SecretKey),
+    Secp256k1(secp256k1::SecretKey),
+    Sr25519(sr25519::SecretKey),
 }
 
-impl<'a> SecretKey<'a> {
-    pub fn to_key(&self) -> model::Key {
+impl SecretKey {
+    pub(crate) fn into_model(self) -> model::Key {
+        let (ty, value) = match self {
+            Self::Ed25519(k) => ("tendermint/PrivKeyEd25519", base64::encode(&k)),
+            Self::Secp256k1(k) => ("tendermint/PrivKeySecp256k1", base64::encode(&k)),
+            Self::Sr25519(k) => ("tendermint/PrivKeySr25519", base64::encode(&k)),
+        };
+
+        model::Key {
+            ty: String::from(ty),
+            value,
+        }
+    }
+
+    pub fn generate(ty: AlgorithmType, rng: impl RngCore + CryptoRng) -> Self {
+        match ty {
+            AlgorithmType::Ed25519 => Self::Ed25519(ed25519::SecretKey::generate(rng)),
+            AlgorithmType::Secp256k1 => Self::Secp256k1(secp256k1::SecretKey::generate(rng)),
+            AlgorithmType::Sr25519 => Self::Sr25519(sr25519::SecretKey::generate(rng)),
+        }
+    }
+
+    pub fn public_key(&self) -> PublicKey {
         match self {
-            Self::Secp256k1(k) => {
-                let ty = String::from("tendermint/PrivKeySecp256k1");
-                let value = base64::encode(k.to_bytes());
-
-                model::Key { ty, value }
-            }
-            Self::Ed25519(k) => {
-                let ty = String::from("tendermint/PrivKeyEd25519");
-                let value = base64::encode(k);
-
-                model::Key { ty, value }
-            }
-            Self::Sr25519(k) => {
-                let ty = String::from("tendermint/PrivKeySr25519");
-                let value = base64::encode(k);
-
-                model::Key { ty, value }
-            }
+            Self::Ed25519(k) => PublicKey::Ed25519(k.public_key()),
+            Self::Secp256k1(k) => PublicKey::Secp256k1(k.public_key()),
+            Self::Sr25519(k) => PublicKey::Sr25519(k.public_key()),
         }
     }
 }
 
-enum PublicKey<'a> {
-    Secp256k1(&'a k256::ecdsa::VerifyingKey),
-    Ed25519(&'a [u8; 32]),
-    Sr25519(&'a [u8; 32]),
+pub enum PublicKey {
+    Ed25519(ed25519::PublicKey),
+    Secp256k1(secp256k1::PublicKey),
+    Sr25519(sr25519::PublicKey),
 }
 
-impl<'a> PublicKey<'a> {
-    pub fn to_key(&self) -> model::Key {
-        match self {
-            Self::Secp256k1(k) => {
-                let ty = String::from("tendermint/PubKeySecp256k1");
-                let value = base64::encode(k.to_bytes());
+impl PublicKey {
+    pub(crate) fn into_model(self) -> model::Key {
+        let (ty, value) = match self {
+            Self::Ed25519(k) => ("tendermint/PrivKeyEd25519", base64::encode(&k)),
+            Self::Secp256k1(k) => ("tendermint/PrivKeySecp256k1", base64::encode(&k)),
+            Self::Sr25519(k) => ("tendermint/PrivKeySr25519", base64::encode(&k)),
+        };
 
-                model::Key { ty, value }
-            }
-            Self::Ed25519(k) => {
-                let ty = String::from("tendermint/PubKeyEd25519");
-                let value = base64::encode(k);
-
-                model::Key { ty, value }
-            }
-            Self::Sr25519(k) => {
-                let ty = String::from("tendermint/PubKeySr25519");
-                let value = base64::encode(k);
-
-                model::Key { ty, value }
-            }
+        model::Key {
+            ty: String::from(ty),
+            value,
         }
     }
 
     pub fn address(&self) -> String {
         match self {
             Self::Secp256k1(k) => {
-                let bytes = k.to_bytes();
-
-                let step1_sha = Sha256::digest(bytes);
+                let step1_sha = Sha256::digest(k);
 
                 let res = Ripemd160::digest(step1_sha);
 
@@ -92,120 +84,37 @@ impl<'a> PublicKey<'a> {
     }
 }
 
-pub enum KeypairType {
+pub struct Keypair {
+    pub secret_key: SecretKey,
+    pub public_key: PublicKey,
+}
+
+pub enum AlgorithmType {
     Secp256k1,
     Ed25519,
     Sr25519,
 }
 
-pub enum Keypair {
-    Secp256k1(ecdsa::SigningKey, ecdsa::VerifyingKey),
-    Ed25519([u8; 64], [u8; 32]),
-    Sr25519([u8; 32], [u8; 32]),
-}
-
 impl Keypair {
-    pub(crate) fn to_serde(&self) -> model::Keypair {
-        match self {
-            Self::Secp256k1(s, p) => {
-                let sk = SecretKey::Secp256k1(s);
-                let pk = PublicKey::Secp256k1(p);
+    pub(crate) fn into_model(self) -> model::Keypair {
+        let address = self.public_key.address();
+        let pub_key = self.public_key.into_model();
 
-                let address = pk.address();
-                let pub_key = pk.to_key();
+        let priv_key = self.secret_key.into_model();
 
-                let priv_key = sk.to_key();
-
-                model::Keypair {
-                    address,
-                    priv_key,
-                    pub_key,
-                }
-            }
-            Self::Ed25519(s, p) => {
-                let sk = SecretKey::Ed25519(s);
-                let pk = PublicKey::Ed25519(p);
-
-                let address = pk.address();
-                let pub_key = pk.to_key();
-
-                let priv_key = sk.to_key();
-
-                model::Keypair {
-                    address,
-                    priv_key,
-                    pub_key,
-                }
-            }
-            Self::Sr25519(s, p) => {
-                let sk = SecretKey::Sr25519(s);
-                let pk = PublicKey::Sr25519(p);
-
-                let address = pk.address();
-                let pub_key = pk.to_key();
-
-                let priv_key = sk.to_key();
-
-                model::Keypair {
-                    address,
-                    priv_key,
-                    pub_key,
-                }
-            }
+        model::Keypair {
+            address,
+            priv_key,
+            pub_key,
         }
     }
+    pub fn generate(ty: AlgorithmType, rng: impl RngCore + CryptoRng) -> Self {
+        let secret_key = SecretKey::generate(ty, rng);
+        let public_key = secret_key.public_key();
 
-    pub fn generate(ty: KeypairType, rng: impl RngCore + CryptoRng) -> Self {
-        match ty {
-            KeypairType::Secp256k1 => {
-                let secret_key = ecdsa::SigningKey::random(rng);
-                let public_key = secret_key.verifying_key();
-
-                Self::Secp256k1(secret_key, public_key)
-            }
-            KeypairType::Ed25519 => {
-                let secret_key = ed25519::generate(rng);
-                let public_key = ed25519::sk2pk(&secret_key);
-
-                Self::Ed25519(secret_key, public_key)
-            }
-            KeypairType::Sr25519 => {
-                let secret_key = sr25519::generate(rng);
-                let public_key = sr25519::sk2pk(&secret_key);
-
-                Self::Sr25519(secret_key, public_key)
-            }
+        Self {
+            secret_key,
+            public_key,
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::{Keypair, KeypairType};
-
-    #[test]
-    fn generate_secp256k1() {
-        let rng = rand::thread_rng();
-
-        let keypair = Keypair::generate(KeypairType::Secp256k1, rng);
-
-        let kp_serde = keypair.to_serde();
-
-        let s = serde_json::to_string_pretty(&kp_serde).unwrap();
-
-        println!("{}", s);
-    }
-
-    #[test]
-    fn generate_ed25519() {
-        let rng = rand::thread_rng();
-
-        let keypair = Keypair::generate(KeypairType::Ed25519, rng);
-
-        let kp_serde = keypair.to_serde();
-
-        let s = serde_json::to_string_pretty(&kp_serde).unwrap();
-
-        println!("{}", s);
     }
 }

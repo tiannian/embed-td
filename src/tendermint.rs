@@ -107,8 +107,8 @@ impl Tendermint {
     pub fn start(&self, config: Config, node_key: Keypair, validator_key: Keypair) -> Result<()> {
         let config_file = {
             let mut config_file = NamedTempFile::new_in(self.get_config_path())?;
-            let config_model = config
-                .into_config_model(self.work_dir.path().to_str().ok_or(Error::PathUtf8Error)?);
+            let config_model =
+                config.into_model(self.work_dir.path().to_str().ok_or(Error::PathUtf8Error)?);
             let cs = toml::to_string_pretty(&config_model)?;
             config_file.write_all(&cs.into_bytes())?;
             config_file.into_temp_path()
@@ -116,7 +116,7 @@ impl Tendermint {
 
         let node_key_file = {
             let mut node_key_file = NamedTempFile::new_in(self.get_node_key_path())?;
-            let node_key_model = node_key.to_serde();
+            let node_key_model = node_key.into_model();
             let s = serde_json::to_vec_pretty(&node_key_model)?;
             node_key_file.write_all(&s)?;
             node_key_file.into_temp_path()
@@ -124,11 +124,15 @@ impl Tendermint {
 
         let validator_key_file = {
             let mut validator_key_file = NamedTempFile::new_in(self.get_validator_key_path())?;
-            let m = validator_key.to_serde();
+            let m = validator_key.into_model();
             let s = serde_json::to_vec_pretty(&m)?;
             validator_key_file.write_all(&s)?;
             validator_key_file.into_temp_path()
         };
+
+        // TODO: Start tendermint here
+        //
+        // TODO: Start tendermint here
 
         config_file.close()?;
         node_key_file.close()?;
