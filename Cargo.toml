@@ -31,11 +31,13 @@ ripemd = "0.1.2"
 curve25519-dalek-ng = "4.1.1"
 
 [features]
-default = ["td_ver_0_34"]
+default = ["td_ver_0_34", "use_precompile_binary"]
 
 # tendermint version of 0.34
 td_ver_0_34 = []
 
+# use precompile binary
+use_precompile_binary = []
 # build tendermint from source code, if no set, download binary from github
 use_source_code = []
 
