@@ -1,37 +1,34 @@
-use serde::{Deserialize, Serialize};
-use time::{Duration, OffsetDateTime};
+use serde::Serialize;
+use time::Duration;
 
 use super::Key;
 
 /// Genesis data
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct Genesis<AppState> {
     /// Time of genesis
-    pub genesis_time: OffsetDateTime,
+    pub genesis_time: String,
 
     /// Chain ID
     pub chain_id: String,
 
     /// Starting height of the blockchain
-    #[serde(with = "super::serializers::from_str")]
-    pub initial_height: i64,
+    pub initial_height: String,
 
     /// Consensus parameters
     pub consensus_params: ConsensusParams,
 
     /// Validators
-    #[serde(default)]
     pub validators: Vec<ValidatorInfo>,
 
     /// App hash
-    #[serde(with = "super::serializers::hexstring")]
     pub app_hash: Vec<u8>,
 
     /// App state
     pub app_state: AppState,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct ConsensusParams {
     /// Block size parameters
     pub block: BlockSize,
@@ -43,57 +40,41 @@ pub struct ConsensusParams {
     pub validator: ValidatorParams,
 
     /// Version parameters
-    #[serde(skip)]
     pub version: Option<VersionParams>,
 }
 
 /// Block size parameters
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug)]
 pub struct BlockSize {
     /// Maximum number of bytes in a block
-    #[serde(with = "super::serializers::from_str")]
-    pub max_bytes: u64,
+    pub max_bytes: String,
 
     /// Maximum amount of gas which can be spent on a block
-    #[serde(with = "super::serializers::from_str")]
-    pub max_gas: i64,
+    pub max_gas: String,
 
     /// This parameter has no value anymore in Tendermint-core
-    #[serde(
-        with = "super::serializers::from_str",
-        default = "BlockSize::default_time_iota_ms"
-    )]
-    pub time_iota_ms: i64,
+    pub time_iota_ms: String,
 }
 
-impl BlockSize {
-    /// The default value for the `time_iota_ms` parameter.
-    pub fn default_time_iota_ms() -> i64 {
-        1000
-    }
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct EvidenceParams {
     /// Maximum allowed age for evidence to be collected
-    #[serde(with = "super::serializers::from_str")]
-    pub max_age_num_blocks: u64,
+    pub max_age_num_blocks: String,
 
     /// Max age duration
     pub max_age_duration: Duration,
 
     /// Max bytes
-    #[serde(with = "super::serializers::from_str", default)]
-    pub max_bytes: i64,
+    pub max_bytes: String,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Clone, Debug)]
 pub struct ValidatorParams {
     pub pub_key_types: Vec<PublicKeyAlgorithm>,
 }
 
 /// Public key algorithms
-#[derive(Copy, Clone, Debug, Serialize, Deserialize)]
+#[derive(Copy, Clone, Debug, Serialize)]
 pub enum PublicKeyAlgorithm {
     /// ed25519
     #[serde(rename = "ed25519")]
@@ -104,17 +85,15 @@ pub enum PublicKeyAlgorithm {
     Secp256k1,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug, Default)]
+#[derive(Clone, Serialize, Debug, Default)]
 pub struct VersionParams {
-    #[serde(with = "super::serializers::from_str")]
-    app_version: u64,
+    app_version: String,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize)]
 pub struct ValidatorInfo {
     /// Validator account address
-    #[serde(with = "super::serializers::hexstring")]
-    pub address: [u8; 20],
+    pub address: String,
 
     /// Validator public key
     pub pub_key: Key,
@@ -128,6 +107,5 @@ pub struct ValidatorInfo {
     pub name: Option<String>,
 
     /// Validator proposer priority
-    #[serde(skip)]
     pub proposer_priority: i64,
 }
