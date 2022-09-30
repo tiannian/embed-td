@@ -1,5 +1,7 @@
 use time::{Duration, OffsetDateTime};
 
+use crate::{PublicKey, AlgorithmType};
+
 /// Genesis data
 pub struct Genesis<AppState> {
     /// Time of genesis
@@ -26,7 +28,7 @@ pub struct Genesis<AppState> {
 
 pub struct ConsensusParams {
     /// Block size parameters
-    pub block: BlockSize,
+    pub block: Block,
 
     /// Evidence parameters
     pub evidence: EvidenceParams,
@@ -39,7 +41,7 @@ pub struct ConsensusParams {
 }
 
 /// Block size parameters
-pub struct BlockSize {
+pub struct Block {
     /// Maximum number of bytes in a block
     pub max_bytes: u64,
 
@@ -48,13 +50,6 @@ pub struct BlockSize {
 
     /// This parameter has no value anymore in Tendermint-core
     pub time_iota_ms: i64,
-}
-
-impl BlockSize {
-    /// The default value for the `time_iota_ms` parameter.
-    pub fn default_time_iota_ms() -> i64 {
-        1000
-    }
 }
 
 pub struct EvidenceParams {
@@ -69,16 +64,7 @@ pub struct EvidenceParams {
 }
 
 pub struct ValidatorParams {
-    pub pub_key_types: Vec<PublicKeyAlgorithm>,
-}
-
-/// Public key algorithms
-pub enum PublicKeyAlgorithm {
-    /// ed25519
-    Ed25519,
-
-    /// secp256k1
-    Secp256k1,
+    pub pub_key_types: Vec<AlgorithmType>,
 }
 
 pub struct VersionParams {
@@ -86,14 +72,11 @@ pub struct VersionParams {
 }
 
 pub struct ValidatorInfo {
-    /// Validator account address
     pub address: [u8; 20],
 
-    /*     /// Validator public key */
-    /* pub pub_key: Key, */
-    /*  */
+    pub public_key: PublicKey,
+
     /// Validator voting power
-    // Compatibility with genesis.json https://github.com/tendermint/tendermint/issues/5549
     pub power: u64,
 
     /// Validator name
