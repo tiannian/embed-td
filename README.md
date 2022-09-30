@@ -62,3 +62,18 @@ EMBEDDED_TD_UPSTREAM_URL = "http://example.com/tendermint"
 EMBEDDED_TD_UPSTREAM_URL = "http://example.com/tendermint"
 ```
 
+
+## Supported platfrom
+
+1. linux, amd64
+2. linux, arm64
+3. linux, armv6
+4. macos, amd64
+5. macos, arm64
+6. windows, amd64
+7. windows, arm64
+8. windows, armv6
+9. other target (only build from source)
+
+1 ~ 8 can work with precompile binary. Beacuse origin tendermin repo only provide these release.
+If you want to running on other platform, please configure go cross compile.
