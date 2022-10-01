@@ -1,5 +1,6 @@
 use serde::Serialize;
-use time::Duration;
+
+use crate::AlgorithmType;
 
 use super::Key;
 
@@ -22,7 +23,7 @@ pub struct Genesis<AppState> {
     pub validators: Vec<ValidatorInfo>,
 
     /// App hash
-    pub app_hash: Vec<u8>,
+    pub app_hash: String,
 
     /// App state
     pub app_state: AppState,
@@ -62,7 +63,7 @@ pub struct EvidenceParams {
     pub max_age_num_blocks: String,
 
     /// Max age duration
-    pub max_age_duration: Duration,
+    pub max_age_duration: String,
 
     /// Max bytes
     pub max_bytes: String,
@@ -85,9 +86,19 @@ pub enum PublicKeyAlgorithm {
     Secp256k1,
 }
 
+impl From<crate::AlgorithmType> for PublicKeyAlgorithm {
+    fn from(e: AlgorithmType) -> Self {
+        match e {
+            AlgorithmType::Ed25519 => PublicKeyAlgorithm::Ed25519,
+            AlgorithmType::Secp256k1 => PublicKeyAlgorithm::Secp256k1,
+            AlgorithmType::Sr25519 => panic!("no support this algorithm type."),
+        }
+    }
+}
+
 #[derive(Clone, Serialize, Debug, Default)]
 pub struct VersionParams {
-    app_version: String,
+    pub app_version: String,
 }
 
 #[derive(Clone, Debug, Serialize)]

@@ -1,14 +1,15 @@
 use std::{
     fs::{self, File},
     io::Write,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::Command,
 };
 
 use rust_embed::RustEmbed;
-use tempfile::{tempdir, NamedTempFile, TempDir};
+use serde::Serialize;
+use tempfile::{tempdir, NamedTempFile};
 
-use crate::{defined, Config, Error, Keypair, Result};
+use crate::{defined, Config, Error, Genesis, Keypair, Result};
 
 #[derive(RustEmbed)]
 #[folder = "$OUT_DIR"]
@@ -17,49 +18,81 @@ pub(crate) struct TendermintEmbed;
 
 #[derive(Debug)]
 pub struct Tendermint {
-    work_dir: TempDir,
+    #[cfg(not(debug_assertions))]
+    work_dir: tempfile::TempDir,
+
+    #[cfg(debug_assertions)]
+    work_dir: PathBuf,
 }
 
 impl Tendermint {
     pub fn get_binary_path(&self) -> PathBuf {
-        #[cfg(unix)]
-        let bin_name = "tendermint";
+        let path = self.get_work_dir();
 
-        #[cfg(windows)]
-        let bin_name = "tendermint.exe";
-
-        self.work_dir.path().join(bin_name)
+        path.join(defined::TENDERMINT_BIN_FILE)
     }
 
     pub fn get_config_dir(&self) -> PathBuf {
-        self.work_dir.path().join(defined::CONFIG_DIR)
+        let path = self.get_work_dir();
+
+        path.join(defined::CONFIG_DIR)
     }
 
     pub fn get_config_path(&self) -> PathBuf {
-        self.work_dir.path().join(defined::CONFIG_FILE)
+        let path = self.get_work_dir();
+
+        path.join(defined::CONFIG_FILE)
     }
 
     pub fn get_node_key_path(&self) -> PathBuf {
-        self.work_dir.path().join(defined::NODE_KEY_FILE)
+        let path = self.get_work_dir();
+
+        path.join(defined::NODE_KEY_FILE)
     }
 
     pub fn get_validator_key_path(&self) -> PathBuf {
-        self.work_dir.path().join(defined::VALIDATOR_KEY_FILE)
+        let path = self.get_work_dir();
+
+        path.join(defined::VALIDATOR_KEY_FILE)
     }
 
     pub fn get_socket_dir(&self) -> PathBuf {
-        self.work_dir.path().join(defined::SOCKET_DIR)
+        let path = self.get_work_dir();
+
+        path.join(defined::SOCKET_DIR)
     }
 
     pub fn get_p2p_dir(&self) -> PathBuf {
-        self.work_dir.path().join(defined::P2P_DIR)
+        let path = self.get_work_dir();
+
+        path.join(defined::P2P_DIR)
+    }
+
+    pub fn get_genesis_path(&self) -> PathBuf {
+        let path = self.get_work_dir();
+
+        path.join(defined::GENESIS_FILE)
+    }
+
+    pub(crate) fn get_work_dir(&self) -> &Path {
+        self.work_dir.as_ref()
     }
 }
 
 impl Tendermint {
     pub fn new() -> Result<Self> {
-        let this = Self {
-            work_dir: tempdir()?,
+        #[cfg(debug_assertions)]
+        let this = {
+            let work_dir = tempdir()?.into_path();
+            log::info!("Config dir is: {:?}", work_dir.to_str());
+            Self { work_dir }
+        };
+
+        #[cfg(not(debug_assertions))]
+        let this = {
+            let work_dir = tempdir()?;
+
+            Self { work_dir }
         };
 
         let ef = TendermintEmbed::get("tendermint").ok_or(Error::NoTendermint)?;
@@ -104,11 +137,20 @@ impl Tendermint {
     /// Start tendermint
     ///
     /// Pass ABCI, Config, NodeKey, ValidatorKey, Genesis
-    pub fn start(&self, config: Config, node_key: Keypair, validator_key: Keypair) -> Result<()> {
+    pub fn start<AppState>(
+        &self,
+        config: Config,
+        node_key: Keypair,
+        validator_key: Keypair,
+        genesis: Genesis<AppState>,
+    ) -> Result<()>
+    where
+        AppState: Serialize,
+    {
         let config_file = {
             let mut config_file = NamedTempFile::new_in(self.get_config_path())?;
             let config_model =
-                config.into_model(self.work_dir.path().to_str().ok_or(Error::PathUtf8Error)?);
+                config.into_model(self.get_work_dir().to_str().ok_or(Error::PathUtf8Error)?);
             let cs = toml::to_string_pretty(&config_model)?;
             config_file.write_all(&cs.into_bytes())?;
             config_file.into_temp_path()
@@ -130,6 +172,14 @@ impl Tendermint {
             validator_key_file.into_temp_path()
         };
 
+        let genesis_file = {
+            let mut file = NamedTempFile::new_in(self.get_genesis_path())?;
+            let m = genesis.into_model();
+            let s = serde_json::to_vec_pretty(&m)?;
+            file.write_all(&s)?;
+            file.into_temp_path()
+        };
+
         // TODO: Start tendermint here
         //
         // TODO: Start tendermint here
@@ -137,6 +187,7 @@ impl Tendermint {
         config_file.close()?;
         node_key_file.close()?;
         validator_key_file.close()?;
+        genesis_file.close()?;
         Ok(())
     }
 }

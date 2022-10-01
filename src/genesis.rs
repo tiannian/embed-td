@@ -1,11 +1,11 @@
-use time::{Duration, OffsetDateTime};
+use time::{Duration, PrimitiveDateTime};
 
-use crate::{PublicKey, AlgorithmType};
+use crate::{model, utils, AlgorithmType, PublicKey};
 
 /// Genesis data
 pub struct Genesis<AppState> {
     /// Time of genesis
-    pub genesis_time: OffsetDateTime,
+    pub genesis_time: PrimitiveDateTime,
 
     /// Chain ID
     pub chain_id: String,
@@ -31,13 +31,13 @@ pub struct ConsensusParams {
     pub block: Block,
 
     /// Evidence parameters
-    pub evidence: EvidenceParams,
+    pub evidence: Evidence,
 
     /// Validator parameters
-    pub validator: ValidatorParams,
+    pub validator: Validator,
 
     /// Version parameters
-    pub version: Option<VersionParams>,
+    pub version: Option<Version>,
 }
 
 /// Block size parameters
@@ -52,7 +52,7 @@ pub struct Block {
     pub time_iota_ms: i64,
 }
 
-pub struct EvidenceParams {
+pub struct Evidence {
     /// Maximum allowed age for evidence to be collected
     pub max_age_num_blocks: u64,
 
@@ -63,11 +63,11 @@ pub struct EvidenceParams {
     pub max_bytes: i64,
 }
 
-pub struct ValidatorParams {
+pub struct Validator {
     pub pub_key_types: Vec<AlgorithmType>,
 }
 
-pub struct VersionParams {
+pub struct Version {
     pub app_version: u64,
 }
 
@@ -84,4 +84,65 @@ pub struct ValidatorInfo {
 
     /// Validator proposer priority
     pub proposer_priority: i64,
+}
+
+impl<App> Genesis<App> {
+    pub(crate) fn into_model(self) -> model::Genesis<App> {
+        let mut validators = Vec::with_capacity(self.validators.len());
+
+        for v in self.validators {
+            let vi = model::ValidatorInfo {
+                address: hex::encode(v.address),
+                pub_key: v.public_key.into_model(),
+                power: v.power,
+                name: v.name,
+                proposer_priority: v.proposer_priority,
+            };
+
+            validators.push(vi);
+        }
+
+        let block = model::BlockSize {
+            max_bytes: format!("{}", self.consensus_params.block.max_bytes),
+            max_gas: format!("{}", self.consensus_params.block.max_gas),
+            time_iota_ms: format!("{}", self.consensus_params.block.time_iota_ms),
+        };
+
+        let evidence = model::EvidenceParams {
+            max_bytes: format!("{}", self.consensus_params.evidence.max_bytes),
+            max_age_duration: format!("{}", self.consensus_params.evidence.max_age_duration),
+            max_age_num_blocks: format!("{}", self.consensus_params.evidence.max_age_num_blocks),
+        };
+
+        let validator = model::ValidatorParams {
+            pub_key_types: self
+                .consensus_params
+                .validator
+                .pub_key_types
+                .into_iter()
+                .map(|e| e.into())
+                .collect(),
+        };
+
+        let version = self.consensus_params.version.map(|f| model::VersionParams {
+            app_version: format!("{}", f.app_version),
+        });
+
+        let consensus_params = model::ConsensusParams {
+            block,
+            evidence,
+            validator,
+            version,
+        };
+
+        model::Genesis {
+            chain_id: self.chain_id,
+            genesis_time: utils::to_rfc3339(self.genesis_time),
+            initial_height: format!("{}", self.initial_height),
+            app_hash: hex::encode(self.app_hash),
+            validators,
+            consensus_params,
+            app_state: self.app_state,
+        }
+    }
 }

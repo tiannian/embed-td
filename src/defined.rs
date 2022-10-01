@@ -1,3 +1,8 @@
+#[cfg(unix)]
+pub const TENDERMINT_BIN_FILE: &str = "tendermint";
+#[cfg(windows)]
+pub const TENDERMINT_BIN_FILE: &str = "tendermint.exe";
+
 pub const CONFIG_DIR: &str = "config";
 pub const CONFIG_FILE: &str = "config/config.toml";
 pub const NODE_KEY_FILE: &str = "config/node_key.json";

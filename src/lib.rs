@@ -16,3 +16,5 @@ pub use genesis::*;
 pub mod model;
 
 pub(crate) mod defined;
+
+pub(crate) mod utils;
