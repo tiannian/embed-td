@@ -2,6 +2,13 @@ use time::{Duration, OffsetDateTime};
 
 use crate::{model, utils, AlgorithmType, PublicKey};
 
+pub mod example {
+    use serde::Serialize;
+
+    #[derive(Debug, Clone, Serialize)]
+    pub struct ExampleAppState {}
+}
+
 /// Genesis data
 pub struct Genesis<AppState> {
     /// Time of genesis
@@ -86,8 +93,20 @@ pub struct ValidatorInfo {
     pub proposer_priority: i64,
 }
 
+impl ValidatorInfo {
+    pub fn generate(public_key: PublicKey) -> Self {
+        Self {
+            address: public_key.address(),
+            public_key,
+            power: 10,
+            name: None,
+            proposer_priority: 0,
+        }
+    }
+}
+
 impl<AppState> Genesis<AppState> {
-    pub fn new(chain_id: String, app_state: AppState, validators: Vec<ValidatorInfo>) -> Self {
+    pub fn generate(public_key: PublicKey) -> Genesis<example::ExampleAppState> {
         let block = Block {
             max_bytes: 22020096,
             max_gas: -1,
@@ -111,14 +130,18 @@ impl<AppState> Genesis<AppState> {
             version: None,
         };
 
-        Self {
+        let chain_id = String::from("test-chain");
+
+        let validator_info = ValidatorInfo::generate(public_key);
+
+        Genesis {
             genesis_time: OffsetDateTime::now_utc(),
             chain_id,
             initial_height: 0,
             consensus_params,
-            validators,
+            validators: vec![validator_info],
             app_hash: Vec::new(),
-            app_state,
+            app_state: example::ExampleAppState {},
         }
     }
 
@@ -181,3 +204,4 @@ impl<AppState> Genesis<AppState> {
         }
     }
 }
+

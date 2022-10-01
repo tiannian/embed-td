@@ -61,26 +61,30 @@ impl PublicKey {
         }
     }
 
-    pub fn address(&self) -> String {
+    pub fn address(&self) -> [u8; 20] {
+        let mut addr = [0u8; 20];
+
         match self {
             Self::Secp256k1(k) => {
                 let step1_sha = Sha256::digest(k);
 
                 let res = Ripemd160::digest(step1_sha);
 
-                hex::encode(res)
+                addr.copy_from_slice(&res);
             }
             Self::Ed25519(k) => {
                 let res = Sha256::digest(k);
 
-                hex::encode(&res[..20])
+                addr.copy_from_slice(&res[..20]);
             }
             Self::Sr25519(k) => {
                 let res = Sha256::digest(k);
 
-                hex::encode(&res[..20])
+                addr.copy_from_slice(&res[..20]);
             }
         }
+
+        addr
     }
 }
 
@@ -103,7 +107,7 @@ impl Keypair {
         let priv_key = self.secret_key.into_model();
 
         model::Keypair {
-            address,
+            address: hex::encode(address),
             priv_key,
             pub_key,
         }

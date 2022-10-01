@@ -194,9 +194,10 @@ impl Tendermint {
 
 #[cfg(test)]
 mod tests {
+    use rand::thread_rng;
     use serde::Serialize;
 
-    use crate::Tendermint;
+    use crate::{AlgorithmType, Genesis, Keypair, Tendermint};
 
     #[test]
     fn test_version() {
@@ -210,5 +211,11 @@ mod tests {
     #[test]
     fn test_start() {
         let app_state = AppState {};
+
+        let rng = thread_rng();
+
+        let validator_key = Keypair::generate(AlgorithmType::Ed25519, rng);
+
+        let genesis = Genesis::generate(validator_key.public_key);
     }
 }
