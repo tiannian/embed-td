@@ -3,9 +3,11 @@ use rand_core::{CryptoRng, RngCore};
 
 use crate::define_as_ref_u8_array;
 
+#[derive(Debug, Clone)]
 pub struct SecretKey(pub [u8; 32], ecdsa::SigningKey);
 define_as_ref_u8_array!(SecretKey);
 
+#[derive(Debug, Clone)]
 pub struct PublicKey(pub [u8; 33], ecdsa::VerifyingKey);
 define_as_ref_u8_array!(PublicKey);
 

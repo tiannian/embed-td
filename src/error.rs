@@ -8,6 +8,9 @@ pub enum Error {
     #[error("No tendermint at this binary")]
     NoTendermint,
 
+    #[error("No tendermint process stop")]
+    NoTendermintStart,
+
     #[error(transparent)]
     StdIoError(#[from] std::io::Error),
 

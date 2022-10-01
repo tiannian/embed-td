@@ -204,4 +204,3 @@ impl<AppState> Genesis<AppState> {
         }
     }
 }
-

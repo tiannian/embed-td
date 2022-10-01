@@ -41,6 +41,8 @@ use_precompile_binary = []
 # build tendermint from source code, if no set, download binary from github
 use_source_code = []
 
+__debug_tmp = []
+
 [build-dependencies]
 flate2 = "1.0.24"
 hex = "0.4.3"
@@ -51,4 +53,5 @@ tar = "0.4.38"
 [dev-dependencies]
 rand = "0.8.5"
 serde_json = "1.0.85"
+env_logger = "0.9.1"
 

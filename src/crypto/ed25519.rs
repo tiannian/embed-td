@@ -4,9 +4,11 @@ use sha2::{Digest, Sha512};
 
 use crate::define_as_ref_u8_array;
 
+#[derive(Debug, Clone)]
 pub struct SecretKey(pub [u8; 64]);
 define_as_ref_u8_array!(SecretKey);
 
+#[derive(Debug, Clone)]
 pub struct PublicKey(pub [u8; 32]);
 define_as_ref_u8_array!(PublicKey);
 

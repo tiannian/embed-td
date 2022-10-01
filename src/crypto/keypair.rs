@@ -4,6 +4,7 @@ use sha2::{Digest, Sha256};
 
 use crate::{ed25519, model, secp256k1, sr25519};
 
+#[derive(Debug, Clone)]
 pub enum SecretKey {
     Ed25519(ed25519::SecretKey),
     Secp256k1(secp256k1::SecretKey),
@@ -41,6 +42,7 @@ impl SecretKey {
     }
 }
 
+#[derive(Debug, Clone)]
 pub enum PublicKey {
     Ed25519(ed25519::PublicKey),
     Secp256k1(secp256k1::PublicKey),
@@ -88,6 +90,7 @@ impl PublicKey {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct Keypair {
     pub secret_key: SecretKey,
     pub public_key: PublicKey,
