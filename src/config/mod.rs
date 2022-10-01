@@ -402,7 +402,7 @@ impl Config {
             db_backend: String::from(self.db_backend.to_str()),
             db_dir,
             log_level: String::from(self.log_level.to_str()),
-            log_format: String::from(self.log_level.to_str()),
+            log_format: String::from(self.log_format.to_str()),
             genesis_file,
             priv_validator_key_file,
             priv_validator_state_file,

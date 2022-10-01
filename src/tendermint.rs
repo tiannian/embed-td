@@ -9,7 +9,7 @@ use rust_embed::RustEmbed;
 use serde::Serialize;
 use tempfile::tempdir;
 
-use crate::{defined, Config, Error, Genesis, Keypair, Result};
+use crate::{defined, model, Config, Error, Genesis, Keypair, Result};
 
 #[derive(RustEmbed)]
 #[folder = "$OUT_DIR"]
@@ -80,6 +80,12 @@ impl Tendermint {
         let path = self.get_work_dir();
 
         path.join(defined::GENESIS_FILE)
+    }
+
+    pub fn get_validator_state_path(&self) -> PathBuf {
+        let path = self.get_work_dir();
+
+        path.join(defined::VALIDATOR_STATE_FILE)
     }
 
     pub(crate) fn get_work_dir(&self) -> &Path {
@@ -186,9 +192,13 @@ impl Tendermint {
         );
         create_file!(genesis, get_genesis_path, serde_json::to_string_pretty);
 
+        let validator_state = model::ValidatorState::default();
+        create_file!(validator_state, get_validator_key_path, serde_json::to_string_pretty);
+
         let command = Command::new(self.get_binary_path())
             .arg("--home")
             .arg(self.get_work_dir())
+            .arg("start")
             .spawn()?;
 
         self.tendermint_child = Some(command);

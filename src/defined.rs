@@ -10,7 +10,7 @@ pub const VALIDATOR_KEY_FILE: &str = "config/priv_validator_key.json";
 
 pub const DATA_DIR: &str = "data";
 pub const GENESIS_FILE: &str = "data/genesis.json";
-pub const VALIDATOR_STATE_FILE: &str = "data/data/priv_validator_state.json";
+pub const VALIDATOR_STATE_FILE: &str = "data/priv_validator_state.json";
 pub const WAL_FILE: &str = "data/cs.wal/wal";
 
 pub const SOCKET_DIR: &str = "sockets";

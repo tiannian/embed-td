@@ -52,9 +52,9 @@ pub enum PublicKey {
 impl PublicKey {
     pub(crate) fn into_model(self) -> model::Key {
         let (ty, value) = match self {
-            Self::Ed25519(k) => ("tendermint/PrivKeyEd25519", base64::encode(&k)),
-            Self::Secp256k1(k) => ("tendermint/PrivKeySecp256k1", base64::encode(&k)),
-            Self::Sr25519(k) => ("tendermint/PrivKeySr25519", base64::encode(&k)),
+            Self::Ed25519(k) => ("tendermint/PubKeyEd25519", base64::encode(&k)),
+            Self::Secp256k1(k) => ("tendermint/PubKeySecp256k1", base64::encode(&k)),
+            Self::Sr25519(k) => ("tendermint/PubKeySr25519", base64::encode(&k)),
         };
 
         model::Key {
