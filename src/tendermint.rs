@@ -194,11 +194,21 @@ impl Tendermint {
 
 #[cfg(test)]
 mod tests {
+    use serde::Serialize;
+
     use crate::Tendermint;
 
     #[test]
     fn test_version() {
         let td = Tendermint::new().unwrap();
         assert_eq!(&td.version().unwrap(), "0.34.21")
+    }
+
+    #[derive(Debug, Serialize)]
+    struct AppState {}
+
+    #[test]
+    fn test_start() {
+        let app_state = AppState {};
     }
 }

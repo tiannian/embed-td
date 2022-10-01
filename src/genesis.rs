@@ -1,11 +1,11 @@
-use time::{Duration, PrimitiveDateTime};
+use time::{Duration, OffsetDateTime};
 
 use crate::{model, utils, AlgorithmType, PublicKey};
 
 /// Genesis data
 pub struct Genesis<AppState> {
     /// Time of genesis
-    pub genesis_time: PrimitiveDateTime,
+    pub genesis_time: OffsetDateTime,
 
     /// Chain ID
     pub chain_id: String,
@@ -86,8 +86,43 @@ pub struct ValidatorInfo {
     pub proposer_priority: i64,
 }
 
-impl<App> Genesis<App> {
-    pub(crate) fn into_model(self) -> model::Genesis<App> {
+impl<AppState> Genesis<AppState> {
+    pub fn new(chain_id: String, app_state: AppState, validators: Vec<ValidatorInfo>) -> Self {
+        let block = Block {
+            max_bytes: 22020096,
+            max_gas: -1,
+            time_iota_ms: 1000,
+        };
+
+        let evidence = Evidence {
+            max_age_num_blocks: 100000,
+            max_age_duration: Duration::days(2000),
+            max_bytes: 1048576,
+        };
+
+        let validator = Validator {
+            pub_key_types: vec![AlgorithmType::Ed25519],
+        };
+
+        let consensus_params = ConsensusParams {
+            block,
+            evidence,
+            validator,
+            version: None,
+        };
+
+        Self {
+            genesis_time: OffsetDateTime::now_utc(),
+            chain_id,
+            initial_height: 0,
+            consensus_params,
+            validators,
+            app_hash: Vec::new(),
+            app_state,
+        }
+    }
+
+    pub(crate) fn into_model(self) -> model::Genesis<AppState> {
         let mut validators = Vec::with_capacity(self.validators.len());
 
         for v in self.validators {
@@ -137,7 +172,7 @@ impl<App> Genesis<App> {
 
         model::Genesis {
             chain_id: self.chain_id,
-            genesis_time: utils::to_rfc3339(self.genesis_time),
+            genesis_time: utils::to_rfc3339_nanos(self.genesis_time),
             initial_height: format!("{}", self.initial_height),
             app_hash: hex::encode(self.app_hash),
             validators,

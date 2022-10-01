@@ -1,10 +1,6 @@
 use std::fmt;
 
-use time::{OffsetDateTime, PrimitiveDateTime, UtcOffset};
-
-pub fn to_rfc3339(t: PrimitiveDateTime) -> String {
-    to_rfc3339_nanos(t.assume_utc())
-}
+use time::{OffsetDateTime, UtcOffset};
 
 pub fn to_rfc3339_nanos(t: OffsetDateTime) -> String {
     // yyyy-mm-ddThh:mm:ssZ
