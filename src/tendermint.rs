@@ -224,9 +224,11 @@ impl<A> Tendermint<A> {
         Ok(())
     }
 
-    pub fn stop(&mut self) -> Result<()> {
+    pub fn stop(self) -> Result<()> {
+        let mut this = self;
+
         // TODO: Use sigint.
-        let child = self
+        let child = this
             .tendermint_child
             .as_mut()
             .ok_or(Error::NoTendermintStart)?;
@@ -236,8 +238,10 @@ impl<A> Tendermint<A> {
         Ok(())
     }
 
-    pub fn kill(&mut self) -> Result<()> {
-        let child = self
+    pub fn kill(self) -> Result<()> {
+        let mut this = self;
+
+        let child = this
             .tendermint_child
             .as_mut()
             .ok_or(Error::NoTendermintStart)?;
