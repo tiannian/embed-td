@@ -2,7 +2,7 @@ use std::{
     fs::{self, File},
     io::Write,
     path::{Path, PathBuf},
-    process::{Child, Command}, thread,
+    process::{Child, Command},
 };
 
 use async_abci::ServerXX;
@@ -190,36 +190,21 @@ impl<A> Tendermint<A> {
         let app = self.app.clone();
         let app_path = self.get_app_path();
 
-        #[cfg(feature = "smol-backend")]
-        {
-            thread::spawn(move || {
-                smol::block_on(async move {
-                    println!("----------------");
-                    let serverxx = ServerXX::new(app).bind_unix(app_path).await.unwrap();
-                    println!("----------------");
+        let command = Command::new(self.get_binary_path())
+            .arg("--home")
+            .arg(self.get_work_dir())
+            .arg("node")
+            .spawn()?;
 
-                    serverxx.run().await.unwrap();
-                    println!("----------------");
-                })
-            });
-        }
+        self.tendermint_child = Some(command);
 
-        #[cfg(feature = "tokio-backend")]
-        {
-            let _ = tokio::spawn(async move {
+       std::thread::spawn(move || {
+            smol::block_on(async move {
                 let serverxx = ServerXX::new(app).bind_unix(app_path).await.unwrap();
 
                 serverxx.run().await.unwrap();
             });
-        }
-
-        let command = Command::new(self.get_binary_path())
-            .arg("--home")
-            .arg(self.get_work_dir())
-            .arg("start")
-            .spawn()?;
-
-        self.tendermint_child = Some(command);
+        });
 
         Ok(())
     }

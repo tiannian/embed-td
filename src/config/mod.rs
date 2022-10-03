@@ -430,6 +430,6 @@ mod utils {
     /* } */
     /*  */
     pub fn build_duration_ms(d: Duration) -> String {
-        format!("{}s", d.whole_milliseconds())
+        format!("{}ms", d.whole_milliseconds())
     }
 }
