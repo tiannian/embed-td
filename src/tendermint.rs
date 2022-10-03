@@ -199,10 +199,25 @@ impl<A> Tendermint<A> {
         self.tendermint_child = Some(command);
 
         std::thread::spawn(move || {
+            #[cfg(feature = "smol-backend")]
             smol::block_on(async move {
-                let serverxx = ServerXX::new(app).bind_unix(app_path).await.unwrap();
-
-                serverxx.run().await.unwrap();
+                ServerXX::new(app)
+                    .bind_unix(app_path)
+                    .await
+                    .unwrap()
+                    .run()
+                    .await
+                    .unwrap();
+            });
+            #[cfg(feature = "tokio-backend")]
+            tokio::block_on(async move {
+                ServerXX::new(app)
+                    .bind_unix(app_path)
+                    .await
+                    .unwrap()
+                    .run()
+                    .await
+                    .unwrap();
             });
         });
 
