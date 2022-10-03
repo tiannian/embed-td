@@ -2,13 +2,6 @@ use time::{Duration, OffsetDateTime};
 
 use crate::{model, utils, AlgorithmType, PublicKey};
 
-pub mod example {
-    use serde::Serialize;
-
-    #[derive(Debug, Clone, Serialize)]
-    pub struct ExampleAppState {}
-}
-
 /// Genesis data
 pub struct Genesis<AppState> {
     /// Time of genesis
@@ -30,7 +23,7 @@ pub struct Genesis<AppState> {
     pub app_hash: Vec<u8>,
 
     /// App state
-    pub app_state: AppState,
+    pub app_state: Option<AppState>,
 }
 
 pub struct ConsensusParams {
@@ -44,7 +37,7 @@ pub struct ConsensusParams {
     pub validator: Validator,
 
     /// Version parameters
-    pub version: Option<Version>,
+    pub version: Version,
 }
 
 /// Block size parameters
@@ -75,7 +68,7 @@ pub struct Validator {
 }
 
 pub struct Version {
-    pub app_version: u64,
+    pub app_version: Option<u64>,
 }
 
 pub struct ValidatorInfo {
@@ -106,7 +99,7 @@ impl ValidatorInfo {
 }
 
 impl<AppState> Genesis<AppState> {
-    pub fn generate(public_key: PublicKey) -> Genesis<example::ExampleAppState> {
+    pub fn generate(public_key: PublicKey) -> Genesis<()> {
         let block = Block {
             max_bytes: 22020096,
             max_gas: -1,
@@ -127,7 +120,7 @@ impl<AppState> Genesis<AppState> {
             block,
             evidence,
             validator,
-            version: None,
+            version: Version { app_version: None },
         };
 
         let chain_id = String::from("test-chain");
@@ -141,7 +134,7 @@ impl<AppState> Genesis<AppState> {
             consensus_params,
             validators: vec![validator_info],
             app_hash: Vec::new(),
-            app_state: example::ExampleAppState {},
+            app_state: None,
         }
     }
 
@@ -152,9 +145,9 @@ impl<AppState> Genesis<AppState> {
             let vi = model::ValidatorInfo {
                 address: hex::encode(v.address),
                 pub_key: v.public_key.into_model(),
-                power: v.power,
+                power: format!("{}", v.power),
                 name: v.name,
-                proposer_priority: v.proposer_priority,
+                proposer_priority: format!("{}", v.proposer_priority),
             };
 
             validators.push(vi);
@@ -168,7 +161,13 @@ impl<AppState> Genesis<AppState> {
 
         let evidence = model::EvidenceParams {
             max_bytes: format!("{}", self.consensus_params.evidence.max_bytes),
-            max_age_duration: format!("{}", self.consensus_params.evidence.max_age_duration),
+            max_age_duration: format!(
+                "{}",
+                self.consensus_params
+                    .evidence
+                    .max_age_duration
+                    .whole_seconds()
+            ),
             max_age_num_blocks: format!("{}", self.consensus_params.evidence.max_age_num_blocks),
         };
 
@@ -182,9 +181,13 @@ impl<AppState> Genesis<AppState> {
                 .collect(),
         };
 
-        let version = self.consensus_params.version.map(|f| model::VersionParams {
-            app_version: format!("{}", f.app_version),
-        });
+        let version = model::VersionParams {
+            app_version: self
+                .consensus_params
+                .version
+                .app_version
+                .map(|e| format!("{}", e)),
+        };
 
         let consensus_params = model::ConsensusParams {
             block,

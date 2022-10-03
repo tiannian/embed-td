@@ -26,7 +26,7 @@ pub struct Genesis<AppState> {
     pub app_hash: String,
 
     /// App state
-    pub app_state: AppState,
+    pub app_state: Option<AppState>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -41,7 +41,7 @@ pub struct ConsensusParams {
     pub validator: ValidatorParams,
 
     /// Version parameters
-    pub version: Option<VersionParams>,
+    pub version: VersionParams,
 }
 
 /// Block size parameters
@@ -98,7 +98,8 @@ impl From<crate::AlgorithmType> for PublicKeyAlgorithm {
 
 #[derive(Clone, Serialize, Debug, Default)]
 pub struct VersionParams {
-    pub app_version: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub app_version: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -110,13 +111,11 @@ pub struct ValidatorInfo {
     pub pub_key: Key,
 
     /// Validator voting power
-    // Compatibility with genesis.json https://github.com/tendermint/tendermint/issues/5549
-    #[serde(alias = "voting_power", alias = "total_voting_power")]
-    pub power: u64,
+    pub power: String,
 
     /// Validator name
     pub name: Option<String>,
 
     /// Validator proposer priority
-    pub proposer_priority: i64,
+    pub proposer_priority: String,
 }

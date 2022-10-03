@@ -6,10 +6,10 @@ use std::{
 };
 
 use rust_embed::RustEmbed;
-use serde::Serialize;
 use tempfile::tempdir;
+use async_abci::ServerXX;
 
-use crate::{defined, model, Config, Error, Genesis, Keypair, Result};
+use crate::{defined, model, App, Config, Error, Genesis, Keypair, Result};
 
 #[derive(RustEmbed)]
 #[folder = "$OUT_DIR"]
@@ -17,7 +17,7 @@ use crate::{defined, model, Config, Error, Genesis, Keypair, Result};
 pub(crate) struct TendermintEmbed;
 
 #[derive(Debug)]
-pub struct Tendermint {
+pub struct Tendermint<A> {
     #[cfg(not(feature = "__debug_tmp"))]
     work_dir: tempfile::TempDir,
 
@@ -25,9 +25,11 @@ pub struct Tendermint {
     work_dir: PathBuf,
 
     tendermint_child: Option<Child>,
+
+    app: A,
 }
 
-impl Tendermint {
+impl<A> Tendermint<A> {
     pub fn get_binary_path(&self) -> PathBuf {
         let path = self.get_work_dir();
 
@@ -93,8 +95,8 @@ impl Tendermint {
     }
 }
 
-impl Tendermint {
-    pub fn new() -> Result<Self> {
+impl<A> Tendermint<A> {
+    pub fn new(app: A) -> Result<Self> {
         #[cfg(feature = "__debug_tmp")]
         let this = {
             let work_dir = tempdir()?.into_path();
@@ -102,6 +104,7 @@ impl Tendermint {
             Self {
                 work_dir,
                 tendermint_child: None,
+                app,
             }
         };
 
@@ -112,6 +115,7 @@ impl Tendermint {
             Self {
                 work_dir,
                 tendermint_child: None,
+                app,
             }
         };
 
@@ -158,15 +162,15 @@ impl Tendermint {
     /// Start tendermint
     ///
     /// Pass ABCI, Config, NodeKey, ValidatorKey, Genesis
-    pub fn start<AppState>(
+    pub fn start(
         &mut self,
         config: Config,
         node_key: Keypair,
         validator_key: Keypair,
-        genesis: Genesis<AppState>,
+        genesis: Genesis<A::AppState>,
     ) -> Result<()>
     where
-        AppState: Serialize,
+        A: App + Clone + 'static,
     {
         macro_rules! create_file {
             ($arg:expr, $func_name:ident, $type_fn:path) => {{
@@ -193,7 +197,23 @@ impl Tendermint {
         create_file!(genesis, get_genesis_path, serde_json::to_string_pretty);
 
         let validator_state = model::ValidatorState::default();
-        create_file!(validator_state, get_validator_key_path, serde_json::to_string_pretty);
+        create_file!(
+            validator_state,
+            get_validator_state_path,
+            serde_json::to_string_pretty
+        );
+
+        #[cfg(feature = "smol-backend")]
+        {
+            let serverxx = ServerXX::new(self.app.clone());
+            let _ = smol::spawn(serverxx.run());
+        }
+
+        #[cfg(feature = "tokio-backend")]
+        {
+            let serverxx = ServerXX::new(self.app.clone());
+            let _ = tokio::spawn(serverxx.run());
+        }
 
         let command = Command::new(self.get_binary_path())
             .arg("--home")
@@ -246,7 +266,7 @@ mod tests {
     use rand::thread_rng;
     use serde::Serialize;
 
-    use crate::{example, AlgorithmType, Config, Genesis, Keypair, Tendermint};
+    use crate::{AlgorithmType, Config, Genesis, Keypair, Tendermint};
 
     fn init() {
         let _ = env_logger::builder().is_test(true).try_init();
@@ -254,7 +274,7 @@ mod tests {
 
     #[test]
     fn test_version() {
-        let td = Tendermint::new().unwrap();
+        let td = Tendermint::<()>::new(()).unwrap();
         assert_eq!(&td.version().unwrap(), "0.34.21")
     }
 
@@ -270,15 +290,16 @@ mod tests {
 
         let node_key = Keypair::generate(AlgorithmType::Ed25519, rng);
 
-        let genesis =
-            Genesis::<example::ExampleAppState>::generate(validator_key.public_key.clone());
+        let genesis = Genesis::<()>::generate(validator_key.public_key.clone());
 
         let config = Config::default();
 
-        let mut tendermint = Tendermint::new().unwrap();
+        let mut tendermint = Tendermint::<()>::new(()).unwrap();
 
         tendermint
             .start(config, node_key, validator_key, genesis)
             .unwrap();
+
+        tendermint.stop().unwrap();
     }
 }

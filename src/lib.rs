@@ -13,6 +13,9 @@ pub use crypto::*;
 mod genesis;
 pub use genesis::*;
 
+mod app;
+pub use app::*;
+
 pub mod model;
 
 pub(crate) mod defined;

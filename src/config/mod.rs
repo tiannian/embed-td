@@ -197,6 +197,10 @@ impl Config {
         let rpc = {
             let laddr = format!("{}/{}", base_dir, defined::RPC_UNIX_SOCKET_FILE);
 
+            // TODO: Windows.
+            // #[cfg(windows)]
+            // let laddr = String::from("");
+
             model::Rpc {
                 laddr,
                 cors_allowed_origins: Default::default(),
