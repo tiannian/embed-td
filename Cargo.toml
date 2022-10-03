@@ -10,7 +10,7 @@ rust-embed = { version = "6.4.1", features = ["interpolate-folder-path", "includ
 tempfile = "3.3.0"
 thiserror = "1.0.35"
 
-time = { version = "0.3.14", features = ["serde"] }
+time = { version = "0.3.14", features = ["serde", "parsing"] }
 log = "0.4.17"
 rand_core = "0.6.4"
 serde = { version = "1.0.144", features = ["derive"] }
@@ -37,6 +37,7 @@ tm-abci = "0.1.2"
 # runtime
 tokio = { version = "1", features = ["rt", "rt-multi-thread"], optional = true }
 smol = { version = "1.2.5", optional = true }
+hyper = { version = "0.14.20", features = ["http1"] }
 
 [features]
 default = ["td_ver_0_34", "use_precompile_binary", "smol-backend"]

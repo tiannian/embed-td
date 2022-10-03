@@ -8,7 +8,7 @@ pub struct SecretKey(pub [u8; 32], ecdsa::SigningKey);
 define_as_ref_u8_array!(SecretKey);
 
 #[derive(Debug, Clone)]
-pub struct PublicKey(pub [u8; 33], ecdsa::VerifyingKey);
+pub struct PublicKey(pub [u8; 33], pub(crate) ecdsa::VerifyingKey);
 define_as_ref_u8_array!(PublicKey);
 
 impl SecretKey {

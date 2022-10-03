@@ -2,7 +2,7 @@ use rand_core::{CryptoRng, RngCore};
 use ripemd::Ripemd160;
 use sha2::{Digest, Sha256};
 
-use crate::{ed25519, model, secp256k1, sr25519};
+use crate::{ed25519, model, secp256k1, sr25519, Error, Result};
 
 #[derive(Debug, Clone)]
 pub enum SecretKey {
@@ -50,6 +50,43 @@ pub enum PublicKey {
 }
 
 impl PublicKey {
+    pub(crate) fn from_model(key: model::Key) -> Result<Self> {
+        let value = match key.ty.as_str() {
+            "tendermint/PubKeyEd25519" => {
+                let data = base64::decode(&key.value)?;
+
+                let mut inner = [0u8; 32];
+
+                inner.copy_from_slice(&data);
+
+                PublicKey::Ed25519(ed25519::PublicKey(inner))
+            }
+            "tendermint/PubKeySecp256k1" => {
+                let data = base64::decode(&key.value)?;
+
+                let inner = k256::ecdsa::VerifyingKey::from_sec1_bytes(&data)?;
+
+                let mut data1 = [0u8; 33];
+
+                data1.copy_from_slice(&data);
+
+                PublicKey::Secp256k1(secp256k1::PublicKey(data1, inner))
+            }
+            "tendermint/PubKeySr25519" => {
+                let data = base64::decode(&key.value)?;
+
+                let mut inner = [0u8; 32];
+
+                inner.copy_from_slice(&data);
+
+                PublicKey::Sr25519(sr25519::PublicKey(inner))
+            }
+            _ => return Err(Error::NoAlgorithmType),
+        };
+
+        Ok(value)
+    }
+
     pub(crate) fn into_model(self) -> model::Key {
         let (ty, value) = match self {
             Self::Ed25519(k) => ("tendermint/PubKeyEd25519", base64::encode(&k)),
@@ -96,6 +133,7 @@ pub struct Keypair {
     pub public_key: PublicKey,
 }
 
+#[derive(Debug, Clone)]
 pub enum AlgorithmType {
     Secp256k1,
     Ed25519,

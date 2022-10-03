@@ -3,6 +3,7 @@ use time::{Duration, OffsetDateTime};
 use crate::{model, utils, AlgorithmType, PublicKey};
 
 /// Genesis data
+#[derive(Debug, Clone)]
 pub struct Genesis<AppState> {
     /// Time of genesis
     pub genesis_time: OffsetDateTime,
@@ -26,6 +27,7 @@ pub struct Genesis<AppState> {
     pub app_state: Option<AppState>,
 }
 
+#[derive(Debug, Clone)]
 pub struct ConsensusParams {
     /// Block size parameters
     pub block: Block,
@@ -41,6 +43,7 @@ pub struct ConsensusParams {
 }
 
 /// Block size parameters
+#[derive(Debug, Clone)]
 pub struct Block {
     /// Maximum number of bytes in a block
     pub max_bytes: u64,
@@ -52,6 +55,7 @@ pub struct Block {
     pub time_iota_ms: i64,
 }
 
+#[derive(Debug, Clone)]
 pub struct Evidence {
     /// Maximum allowed age for evidence to be collected
     pub max_age_num_blocks: u64,
@@ -63,14 +67,17 @@ pub struct Evidence {
     pub max_bytes: i64,
 }
 
+#[derive(Debug, Clone)]
 pub struct Validator {
     pub pub_key_types: Vec<AlgorithmType>,
 }
 
+#[derive(Debug, Clone)]
 pub struct Version {
     pub app_version: Option<u64>,
 }
 
+#[derive(Debug, Clone)]
 pub struct ValidatorInfo {
     pub address: [u8; 20],
 
@@ -198,7 +205,7 @@ impl<AppState> Genesis<AppState> {
 
         model::Genesis {
             chain_id: self.chain_id,
-            genesis_time: utils::to_rfc3339_nanos(self.genesis_time),
+            genesis_time: utils::to_rfc3339_nanos(&self.genesis_time),
             initial_height: format!("{}", self.initial_height),
             app_hash: hex::encode(self.app_hash),
             validators,

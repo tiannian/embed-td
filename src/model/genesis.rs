@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 use crate::AlgorithmType;
 
@@ -102,7 +102,7 @@ pub struct VersionParams {
     pub app_version: Option<String>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct ValidatorInfo {
     /// Validator account address
     pub address: String,

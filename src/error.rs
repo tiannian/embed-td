@@ -11,6 +11,9 @@ pub enum Error {
     #[error("No tendermint process stop")]
     NoTendermintStart,
 
+    #[error("No algorithm type")]
+    NoAlgorithmType,
+
     #[error(transparent)]
     StdIoError(#[from] std::io::Error),
 
@@ -22,6 +25,18 @@ pub enum Error {
 
     #[error(transparent)]
     JsonError(#[from] serde_json::Error),
+
+    #[error(transparent)]
+    FromHexError(#[from] hex::FromHexError),
+
+    #[error(transparent)]
+    Base64DecodeError(#[from] base64::DecodeError),
+
+    #[error(transparent)]
+    ParseIntError(#[from] std::num::ParseIntError),
+
+    #[error(transparent)]
+    Secp256k1Error(#[from] k256::schnorr::Error),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

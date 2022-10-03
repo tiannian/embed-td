@@ -2,7 +2,7 @@ use std::fmt;
 
 use time::{OffsetDateTime, UtcOffset};
 
-pub fn to_rfc3339_nanos(t: OffsetDateTime) -> String {
+pub fn to_rfc3339_nanos(t: &OffsetDateTime) -> String {
     // yyyy-mm-ddThh:mm:ssZ
     let mut buf = String::with_capacity(20);
 
@@ -11,7 +11,7 @@ pub fn to_rfc3339_nanos(t: OffsetDateTime) -> String {
     buf
 }
 
-pub fn fmt_as_rfc3339_nanos(t: OffsetDateTime, f: &mut impl fmt::Write) -> fmt::Result {
+pub fn fmt_as_rfc3339_nanos(t: &OffsetDateTime, f: &mut impl fmt::Write) -> fmt::Result {
     let t = t.to_offset(UtcOffset::UTC);
     let nanos = t.nanosecond();
     if nanos == 0 {
