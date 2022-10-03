@@ -2,12 +2,12 @@ use std::{
     fs::{self, File},
     io::Write,
     path::{Path, PathBuf},
-    process::{Child, Command},
+    process::{Child, Command}, thread,
 };
 
+use async_abci::ServerXX;
 use rust_embed::RustEmbed;
 use tempfile::tempdir;
-use async_abci::ServerXX;
 
 use crate::{defined, model, App, Config, Error, Genesis, Keypair, Result};
 
@@ -42,12 +42,6 @@ impl<A> Tendermint<A> {
         path.join(defined::CONFIG_DIR)
     }
 
-    pub fn get_data_dir(&self) -> PathBuf {
-        let path = self.get_work_dir();
-
-        path.join(defined::DATA_DIR)
-    }
-
     pub fn get_config_path(&self) -> PathBuf {
         let path = self.get_work_dir();
 
@@ -78,20 +72,12 @@ impl<A> Tendermint<A> {
         path.join(defined::P2P_DIR)
     }
 
-    pub fn get_genesis_path(&self) -> PathBuf {
-        let path = self.get_work_dir();
-
-        path.join(defined::GENESIS_FILE)
-    }
-
-    pub fn get_validator_state_path(&self) -> PathBuf {
-        let path = self.get_work_dir();
-
-        path.join(defined::VALIDATOR_STATE_FILE)
-    }
-
     pub(crate) fn get_work_dir(&self) -> &Path {
         self.work_dir.as_ref()
+    }
+
+    pub fn get_app_path(&self) -> PathBuf {
+        self.get_work_dir().join(defined::APP_UNIX_SOCKET_FILE)
     }
 }
 
@@ -142,7 +128,6 @@ impl<A> Tendermint<A> {
         fs::create_dir_all(this.get_config_dir())?;
         fs::create_dir_all(this.get_p2p_dir())?;
         fs::create_dir_all(this.get_socket_dir())?;
-        fs::create_dir_all(this.get_data_dir())?;
 
         Ok(this)
     }
@@ -172,47 +157,60 @@ impl<A> Tendermint<A> {
     where
         A: App + Clone + 'static,
     {
-        macro_rules! create_file {
-            ($arg:expr, $func_name:ident, $type_fn:path) => {{
-                let mut file = File::create(self.$func_name())?;
-                let m = $arg.into_model();
-                let cs = $type_fn(&m)?;
-                file.write_all(&cs.into_bytes())?;
-            }};
+        if config.data_dir.is_empty() {
+            fs::create_dir_all(self.get_work_dir().join(defined::DATA_DIR))?;
         }
 
-        {
-            let mut file = File::create(self.get_config_path())?;
-            let m = config.into_model(self.get_work_dir().to_str().ok_or(Error::PathUtf8Error)?);
-            let cs = toml::to_string_pretty(&m)?;
-            file.write_all(&cs.into_bytes())?;
-        }
+        let mut file = File::create(self.get_config_path())?;
+        let cm = config.into_model(self.get_work_dir().to_str().ok_or(Error::PathUtf8Error)?);
+        let cs = toml::to_string_pretty(&cm)?;
+        file.write_all(&cs.into_bytes())?;
 
-        create_file!(node_key, get_node_key_path, serde_json::to_string_pretty);
-        create_file!(
-            validator_key,
-            get_validator_key_path,
-            serde_json::to_string_pretty
-        );
-        create_file!(genesis, get_genesis_path, serde_json::to_string_pretty);
+        let mut file = File::create(self.get_node_key_path())?;
+        let m = node_key.into_model();
+        let cs = serde_json::to_string_pretty(&m)?;
+        file.write_all(&cs.into_bytes())?;
+
+        let mut file = File::create(self.get_validator_key_path())?;
+        let m = validator_key.into_model();
+        let cs = serde_json::to_string_pretty(&m)?;
+        file.write_all(&cs.into_bytes())?;
+
+        let mut file = File::create(&cm.genesis_file)?;
+        let m = genesis.into_model();
+        let cs = serde_json::to_string_pretty(&m)?;
+        file.write_all(&cs.into_bytes())?;
 
         let validator_state = model::ValidatorState::default();
-        create_file!(
-            validator_state,
-            get_validator_state_path,
-            serde_json::to_string_pretty
-        );
+        let mut file = File::create(cm.priv_validator_state_file)?;
+        let m = validator_state.into_model();
+        let cs = serde_json::to_string_pretty(&m)?;
+        file.write_all(&cs.into_bytes())?;
+
+        let app = self.app.clone();
+        let app_path = self.get_app_path();
 
         #[cfg(feature = "smol-backend")]
         {
-            let serverxx = ServerXX::new(self.app.clone());
-            let _ = smol::spawn(serverxx.run());
+            thread::spawn(move || {
+                smol::block_on(async move {
+                    println!("----------------");
+                    let serverxx = ServerXX::new(app).bind_unix(app_path).await.unwrap();
+                    println!("----------------");
+
+                    serverxx.run().await.unwrap();
+                    println!("----------------");
+                })
+            });
         }
 
         #[cfg(feature = "tokio-backend")]
         {
-            let serverxx = ServerXX::new(self.app.clone());
-            let _ = tokio::spawn(serverxx.run());
+            let _ = tokio::spawn(async move {
+                let serverxx = ServerXX::new(app).bind_unix(app_path).await.unwrap();
+
+                serverxx.run().await.unwrap();
+            });
         }
 
         let command = Command::new(self.get_binary_path())

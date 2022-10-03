@@ -9,9 +9,9 @@ pub const NODE_KEY_FILE: &str = "config/node_key.json";
 pub const VALIDATOR_KEY_FILE: &str = "config/priv_validator_key.json";
 
 pub const DATA_DIR: &str = "data";
-pub const GENESIS_FILE: &str = "data/genesis.json";
-pub const VALIDATOR_STATE_FILE: &str = "data/priv_validator_state.json";
-pub const WAL_FILE: &str = "data/cs.wal/wal";
+pub const GENESIS_FILE: &str = "genesis.json";
+pub const VALIDATOR_STATE_FILE: &str = "priv_validator_state.json";
+pub const WAL_FILE: &str = "cs.wal";
 
 pub const SOCKET_DIR: &str = "sockets";
 pub const RPC_UNIX_SOCKET_FILE: &str = "sockets/rpc";

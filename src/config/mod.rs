@@ -194,12 +194,14 @@ impl Config {
 
 impl Config {
     pub(crate) fn into_model(self, base_dir: &str) -> model::Config {
-        let rpc = {
-            let laddr = format!("{}/{}", base_dir, defined::RPC_UNIX_SOCKET_FILE);
+        let db_dir = if self.data_dir.is_empty() {
+            format!("{}/{}", base_dir, defined::DATA_DIR)
+        } else {
+            self.data_dir
+        };
 
-            // TODO: Windows.
-            // #[cfg(windows)]
-            // let laddr = String::from("");
+        let rpc = {
+            let laddr = format!("unix://{}/{}", base_dir, defined::RPC_UNIX_SOCKET_FILE);
 
             model::Rpc {
                 laddr,
@@ -319,7 +321,7 @@ impl Config {
         };
 
         let consensus = {
-            let wal_file = format!("{}/{}", base_dir, defined::WAL_FILE);
+            let wal_file = format!("{}/{}", db_dir, defined::WAL_FILE);
 
             model::Consensus {
                 wal_file,
@@ -382,20 +384,14 @@ impl Config {
             }
         };
 
-        let proxy_app = format!("{}/{}", base_dir, defined::APP_UNIX_SOCKET_FILE);
+        let proxy_app = format!("unix://{}/{}", base_dir, defined::APP_UNIX_SOCKET_FILE);
         log::debug!("proxy_app socket file is : {}", proxy_app);
 
-        let db_dir = if self.data_dir.is_empty() {
-            format!("{}/{}", base_dir, defined::DATA_DIR)
-        } else {
-            self.data_dir
-        };
-
-        let genesis_file = format!("{}/{}", base_dir, defined::GENESIS_FILE);
+        let genesis_file = format!("{}/{}", db_dir, defined::GENESIS_FILE);
 
         let priv_validator_key_file = format!("{}/{}", base_dir, defined::VALIDATOR_KEY_FILE);
 
-        let priv_validator_state_file = format!("{}/{}", base_dir, defined::VALIDATOR_STATE_FILE);
+        let priv_validator_state_file = format!("{}/{}", db_dir, defined::VALIDATOR_STATE_FILE);
 
         let node_key_file = format!("{}/{}", base_dir, defined::NODE_KEY_FILE);
 
