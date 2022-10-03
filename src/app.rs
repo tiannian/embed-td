@@ -10,7 +10,5 @@ pub trait App: ApplicationXX {
 impl App for () {
     type AppState = ();
 
-    fn app_state(&self) -> Self::AppState {
-        ()
-    }
+    fn app_state(&self) -> Self::AppState {}
 }

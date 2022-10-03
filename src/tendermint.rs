@@ -198,7 +198,7 @@ impl<A> Tendermint<A> {
 
         self.tendermint_child = Some(command);
 
-       std::thread::spawn(move || {
+        std::thread::spawn(move || {
             smol::block_on(async move {
                 let serverxx = ServerXX::new(app).bind_unix(app_path).await.unwrap();
 
