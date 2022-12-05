@@ -50,23 +50,26 @@ fn download(platform: &str, version: &str, target: &str) {
 }
 
 fn main() {
-    let target_triple = env::var("TARGET").unwrap();
+    let arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+    let sys = env::var("CARGO_CFG_TARGET_OS").unwrap();
 
-    let tts: Vec<&str> = target_triple.split('-').collect();
-
-    let arch = tts[0];
-    let sys = tts[2];
-
-    let td_name = match (sys, arch) {
+    let td_name = match (sys.as_str(), arch.as_str()) {
         ("linux", "aarch64") => "linux_arm64",
         ("linux", "arm") => "linux_armv6",
-        ("linux", "armv7") => "linux_armv6",
         ("linux", "x86_64") => "linux_amd64",
+        ("android", "aarch64") => "linux_arm64",
+        ("android", "arm") => "linux_armv6",
+        ("android", "x86_64") => "linux_amd64",
         ("windows", "aarch64") => "windows_arm64",
+        ("windows", "arm") => "windows_armv6",
         ("windows", "x86_64") => "windows_amd64",
         ("darwin", "aarch64") => "darwin_arm64",
         ("darwin", "x86_64") => "darwin_amd64",
-        _ => panic!("unsupport triple: {}", target_triple),
+        _ => {
+            let target_triple = env::var("TARGET").unwrap();
+
+            panic!("unsupport triple: {}", target_triple);
+        }
     };
 
     let version = {

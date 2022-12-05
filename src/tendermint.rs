@@ -134,7 +134,7 @@ impl<A> Tendermint<A> {
     }
 
     pub fn version(&self) -> Result<String> {
-        let version = Command::new(&self.get_binary_path())
+        let version = Command::new(self.get_binary_path())
             .arg("version")
             .output()?;
 

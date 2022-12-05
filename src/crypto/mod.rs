@@ -20,4 +20,3 @@ macro_rules! define_as_ref_u8_array {
 }
 
 pub(crate) use define_as_ref_u8_array;
-

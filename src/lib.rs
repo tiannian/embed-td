@@ -10,7 +10,7 @@ pub use error::*;
 
 pub mod crypto;
 #[doc(inline)]
-pub use crypto::{Keypair, PublicKey, SecretKey, AlgorithmType};
+pub use crypto::{AlgorithmType, Keypair, PublicKey, SecretKey};
 
 pub mod genesis;
 #[doc(inline)]
