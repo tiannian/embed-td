@@ -1,5 +1,5 @@
 [package]
-name = "embeded-td"
+name = "embedded-td"
 version = "0.1.0"
 edition = "2021"
 

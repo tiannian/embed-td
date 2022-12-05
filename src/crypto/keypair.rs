@@ -2,8 +2,11 @@ use rand_core::{CryptoRng, RngCore};
 use ripemd::Ripemd160;
 use sha2::{Digest, Sha256};
 
-use crate::{ed25519, model, secp256k1, sr25519};
+use crate::model;
 
+use super::{ed25519, secp256k1, sr25519};
+
+/// Secret key for tendermint
 #[derive(Debug, Clone)]
 pub enum SecretKey {
     Ed25519(ed25519::SecretKey),
@@ -42,6 +45,7 @@ impl SecretKey {
     }
 }
 
+/// Public key for tendermint
 #[derive(Debug, Clone)]
 pub enum PublicKey {
     Ed25519(ed25519::PublicKey),
@@ -90,6 +94,7 @@ impl PublicKey {
     }
 }
 
+/// Keypair of tendermint
 #[derive(Debug, Clone)]
 pub struct Keypair {
     pub secret_key: SecretKey,

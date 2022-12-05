@@ -1,6 +1,6 @@
 use time::Duration;
 
-use crate::define_build_mode_setter;
+use super::define_build_mode_setter;
 
 #[derive(Debug, Clone)]
 pub struct ConsensusConfig {

@@ -1,6 +1,11 @@
+//! Genesis type of tendermint
+
 use time::{Duration, OffsetDateTime};
 
-use crate::{model, utils, AlgorithmType, PublicKey};
+use crate::{
+    crypto::{AlgorithmType, PublicKey},
+    model, utils,
+};
 
 /// Genesis data
 pub struct Genesis<AppState> {

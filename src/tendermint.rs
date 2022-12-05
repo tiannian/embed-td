@@ -9,13 +9,14 @@ use async_abci::ServerXX;
 use rust_embed::RustEmbed;
 use tempfile::tempdir;
 
-use crate::{defined, model, App, Config, Error, Genesis, Keypair, Result};
+use crate::{crypto::Keypair, defined, model, App, Config, Error, Genesis, Result};
 
 #[derive(RustEmbed)]
 #[folder = "$OUT_DIR"]
 #[include = "tendermint"]
 pub(crate) struct TendermintEmbed;
 
+/// Tendermint instance
 #[derive(Debug)]
 pub struct Tendermint<A> {
     #[cfg(not(feature = "__debug_tmp"))]

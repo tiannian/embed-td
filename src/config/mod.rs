@@ -1,3 +1,5 @@
+//! Config of tendermint
+
 mod log_level;
 pub use log_level::*;
 
@@ -126,7 +128,6 @@ impl Config {
     }
 }
 
-#[macro_export]
 macro_rules! define_to_str_for_enum {
     ($e:ident, $( $key:ident => $value:expr ),*) => {
         impl $e {
@@ -139,7 +140,8 @@ macro_rules! define_to_str_for_enum {
     };
 }
 
-#[macro_export]
+pub(crate) use define_to_str_for_enum;
+
 macro_rules! define_build_mode_setter {
     ($name:ident, str) => {
         pub fn $name(self, $name: &str) -> Self {
@@ -163,6 +165,8 @@ macro_rules! define_build_mode_setter {
         }
     };
 }
+
+pub(crate) use define_build_mode_setter;
 
 impl Config {
     define_build_mode_setter!(log_level, LogLevel);

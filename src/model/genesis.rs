@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::AlgorithmType;
+use crate::crypto::AlgorithmType;
 
 use super::Key;
 
@@ -86,7 +86,7 @@ pub enum PublicKeyAlgorithm {
     Secp256k1,
 }
 
-impl From<crate::AlgorithmType> for PublicKeyAlgorithm {
+impl From<AlgorithmType> for PublicKeyAlgorithm {
     fn from(e: AlgorithmType) -> Self {
         match e {
             AlgorithmType::Ed25519 => PublicKeyAlgorithm::Ed25519,

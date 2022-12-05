@@ -1,7 +1,7 @@
 use k256::ecdsa;
 use rand_core::{CryptoRng, RngCore};
 
-use crate::define_as_ref_u8_array;
+use super::define_as_ref_u8_array;
 
 #[derive(Debug, Clone)]
 pub struct SecretKey(pub [u8; 32], ecdsa::SigningKey);

@@ -1,5 +1,6 @@
 use thiserror::Error;
 
+/// Error
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("path utf8 error")]
@@ -24,4 +25,5 @@ pub enum Error {
     JsonError(#[from] serde_json::Error),
 }
 
+/// Result of error
 pub type Result<T> = std::result::Result<T, Error>;

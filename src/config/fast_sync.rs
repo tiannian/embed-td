@@ -1,4 +1,4 @@
-use crate::define_to_str_for_enum;
+use super::define_to_str_for_enum;
 
 #[derive(Debug, Default, Clone)]
 pub enum FastSyncVersion {

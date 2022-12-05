@@ -1,6 +1,7 @@
 use serde::Serialize;
 use tm_abci::ApplicationXX;
 
+/// ABCI Application of tendermint
 pub trait App: ApplicationXX {
     type AppState: Serialize;
 

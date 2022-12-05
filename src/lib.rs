@@ -1,5 +1,6 @@
-mod config;
-pub use config::*;
+pub mod config;
+#[doc(inline)]
+pub use config::Config;
 
 mod tendermint;
 pub use tendermint::*;
@@ -7,16 +8,18 @@ pub use tendermint::*;
 mod error;
 pub use error::*;
 
-mod crypto;
-pub use crypto::*;
+pub mod crypto;
+#[doc(inline)]
+pub use crypto::{Keypair, PublicKey, SecretKey, AlgorithmType};
 
-mod genesis;
-pub use genesis::*;
+pub mod genesis;
+#[doc(inline)]
+pub use genesis::Genesis;
 
 mod app;
 pub use app::*;
 
-pub mod model;
+pub(crate) mod model;
 
 pub(crate) mod defined;
 

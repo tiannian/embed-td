@@ -1,4 +1,4 @@
-use embeded_td::{AlgorithmType, Config, Genesis, Keypair, Tendermint};
+use embedded_td::{AlgorithmType, Config, Genesis, Keypair, Tendermint};
 use rand::thread_rng;
 
 fn main() {

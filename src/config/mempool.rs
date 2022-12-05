@@ -1,6 +1,6 @@
 use time::Duration;
 
-use crate::{define_build_mode_setter, define_to_str_for_enum};
+use super::{define_to_str_for_enum, define_build_mode_setter};
 
 #[derive(Debug, Clone, Default)]
 pub enum MempoolVersion {

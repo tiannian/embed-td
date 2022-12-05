@@ -2,7 +2,7 @@ use curve25519_dalek_ng::{constants, scalar::Scalar};
 use rand_core::{CryptoRng, RngCore};
 use sha2::{Digest, Sha512};
 
-use crate::define_as_ref_u8_array;
+use super::define_as_ref_u8_array;
 
 #[derive(Debug, Clone)]
 pub struct SecretKey(pub [u8; 64]);
