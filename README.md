@@ -1,4 +1,4 @@
-# embed-td
+# embedded-td
 Embed tendermint into rust to use tendermint as a crate.
 
 ## Usage
