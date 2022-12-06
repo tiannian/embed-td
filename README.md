@@ -67,7 +67,6 @@ You can use these features:
     - `smol-backend`(default).
     - `tokio-backend`
 - How to get tendermint?
-    - `use_precompile_binary`(default)
     - `use_source_code`
 
 ## Supported platfrom
