@@ -3,57 +3,43 @@ use std::{env, fs, path::Path, process::Command};
 use flate2::read::GzDecoder;
 use tar::Archive;
 
-fn check_and_download(td_name: &str, version: &str) {
-    let out_dir = env::var("OUT_DIR").unwrap();
+fn check_run(p: &Path, version: Option<&str>) -> bool {
+    let output = Command::new(p).arg("version").output().unwrap();
 
-    let out_file = format!("{}/tendermint", out_dir);
-
-    let out_path = Path::new(&out_file);
-
-    if out_path.exists() {
-        let output = Command::new(out_path).arg("version").output().unwrap();
-        if output.status.success() {
-            return;
-        } else {
-            fs::remove_file(out_path).unwrap();
-        }
+    if let Some(v) = version {
+        let ver = String::from_utf8(output.stdout).unwrap();
+        ver.trim() == v.trim()
+    } else {
+        output.status.success()
     }
-    download(td_name, version, &out_file);
 }
 
-fn download(platform: &str, version: &str, target: &str) {
-    let filename = format!("tendermint_{}_{}.tar.gz", version, platform);
+// None: No this dir
+// Some(true): tendermint right
+// Some(false): tendermint error
+fn check_has_tendermint(dir: &str, version: Option<&str>) -> Option<bool> {
+    let out_path = Path::new(dir).join("tendermint");
 
-    let url = format!(
-        "https://github.com/tendermint/tendermint/releases/download/v{}/{}",
-        version, filename
-    );
-
-    let body = reqwest::blocking::get(url).unwrap();
-
-    // let digester = DigestReader::new(body, Sha256::new());
-
-    let decoder = GzDecoder::new(body);
-
-    let mut archive = Archive::new(decoder);
-
-    let entries = archive.entries().unwrap();
-
-    for entry in entries {
-        let mut entry = entry.unwrap();
-        let path = entry.path().unwrap();
-
-        if path.to_str() == Some("tendermint") {
-            entry.unpack(target).unwrap();
-        }
+    if out_path.exists() {
+        Some(check_run(&out_path, version))
+    } else {
+        None
     }
+}
+
+fn download_unpack_tgz(url: &str, out_dir: &str) {
+    let body = reqwest::blocking::get(url).unwrap();
+    let decoder = GzDecoder::new(body);
+    let mut archive = Archive::new(decoder);
+    println!("ssss");
+    archive.unpack(out_dir).unwrap();
 }
 
 fn main() {
     let arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
     let sys = env::var("CARGO_CFG_TARGET_OS").unwrap();
 
-    let td_name = match (sys.as_str(), arch.as_str()) {
+    let platform = match (sys.as_str(), arch.as_str()) {
         ("linux", "aarch64") => "linux_arm64",
         ("linux", "arm") => "linux_armv6",
         ("linux", "x86_64") => "linux_amd64",
@@ -74,11 +60,42 @@ fn main() {
 
     let version = {
         if env::var("CARGO_FEATURE_TD_VER_0_34").unwrap() == "1" {
-            "0.34.21"
+            "0.34.23"
         } else {
             panic!("must use special version of tendermint")
         }
     };
 
-    check_and_download(td_name, version);
+    let use_source_code = env::var("CARGO_FEATURE_USE_SOURCE_CODE");
+
+    let upstream_url = env::var("EMBEDDED_TD_UPSTREAM_URL").ok();
+
+    if use_source_code.is_err() {
+        let dir = format!("{}/build", env::var("OUT_DIR").unwrap());
+
+        if let Some(url) = upstream_url {
+            if let Some(v) = check_has_tendermint(&dir, None) {
+                if !v {
+                    fs::remove_dir_all(&dir).unwrap();
+                    download_unpack_tgz(&url, &dir);
+                }
+            } else {
+                download_unpack_tgz(&url, &dir);
+            }
+        } else {
+            let url = format!("https://github.com/tendermint/tendermint/releases/download/v{}/tendermint_{}_{}.tar.gz",version, version, platform);
+
+            if let Some(v) = check_has_tendermint(&dir, Some(version)) {
+                if !v {
+                    fs::remove_dir_all(&dir).unwrap();
+                    download_unpack_tgz(&url, &dir);
+                }
+            } else {
+                download_unpack_tgz(&url, &dir);
+            }
+        }
+    }
+
+    println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-env-changed=EMBEDDED_TD_UPSTREAM_URL");
 }

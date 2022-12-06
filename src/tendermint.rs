@@ -12,7 +12,7 @@ use tempfile::tempdir;
 use crate::{crypto::Keypair, defined, model, App, Config, Error, Genesis, Result};
 
 #[derive(RustEmbed)]
-#[folder = "$OUT_DIR"]
+#[folder = "$OUT_DIR/build"]
 #[include = "tendermint"]
 pub(crate) struct TendermintEmbed;
 
@@ -138,8 +138,6 @@ impl<A> Tendermint<A> {
             .arg("version")
             .output()?;
 
-        println!("{:?}", version);
-
         let s = String::from_utf8(version.stdout)?;
 
         Ok(String::from(s.trim()))
@@ -200,7 +198,7 @@ impl<A> Tendermint<A> {
         self.tendermint_child = Some(command);
 
         std::thread::spawn(move || {
-            #[cfg(feature = "smol-backend")]
+            #[cfg(feature = "async-smol")]
             smol::block_on(async move {
                 ServerXX::new(app)
                     .bind_unix(app_path)
@@ -210,7 +208,7 @@ impl<A> Tendermint<A> {
                     .await
                     .unwrap();
             });
-            #[cfg(feature = "tokio-backend")]
+            #[cfg(feature = "async-tokio")]
             tokio::block_on(async move {
                 ServerXX::new(app)
                     .bind_unix(app_path)

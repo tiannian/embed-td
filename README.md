@@ -45,11 +45,9 @@ embedded-td = { version = "0.1", features = ["use_source_code", "backend_cleveld
 embedded-td = { version = "0.1", features = ["use_source_code", "backend_rocksdb"] }
 ```
 
-### Fork tendermint
+### Custom upstream
 
-If you fork tendermint, please use `custom-upstream` feature.
-
-Please set environment `EMBEDDED_TD_UPSTREAM_URL` as fork version's url.
+If you fork tendermint, use environment `EMBEDDED_TD_UPSTREAM_URL` as custom upstream's url.
 
 For example:
 
@@ -71,7 +69,6 @@ You can use these features:
 - How to get tendermint?
     - `use_precompile_binary`(default)
     - `use_source_code`
-- Use fork version of tendermint, `custom-upstream`.
 
 ## Supported platfrom
 
