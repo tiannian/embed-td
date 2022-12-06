@@ -60,7 +60,7 @@ fn main() {
 
     let version = {
         if env::var("CARGO_FEATURE_TD_VER_0_34").unwrap() == "1" {
-            "0.34.23"
+            "0.34.24"
         } else {
             panic!("must use special version of tendermint")
         }
