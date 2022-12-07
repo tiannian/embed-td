@@ -36,6 +36,11 @@ fn download_unpack_tgz(url: &str, out_dir: &str) {
 }
 
 fn main() {
+    if env::var("DOCS_RS").is_ok() {
+        // Skip download tendermint for docs.rs
+        return;
+    }
+
     let arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
     let sys = env::var("CARGO_CFG_TARGET_OS").unwrap();
 
