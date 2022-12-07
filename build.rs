@@ -36,8 +36,12 @@ fn download_unpack_tgz(url: &str, out_dir: &str) {
 }
 
 fn main() {
+    let dir = format!("{}/build", env::var("OUT_DIR").unwrap());
     if env::var("DOCS_RS").is_ok() {
         // Skip download tendermint for docs.rs
+        let td_dir = format!("{}/tendermint", dir);
+        fs::create_dir_all(dir).unwrap();
+        fs::File::create(&td_dir).unwrap();
         return;
     }
 
