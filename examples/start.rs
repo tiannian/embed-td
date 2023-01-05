@@ -13,10 +13,10 @@ fn main() {
 
     let config = Config::default();
 
-    let mut tendermint = Tendermint::<()>::new(()).unwrap();
+    let mut tendermint = Tendermint::new().unwrap();
 
     tendermint
-        .start(config, node_key, validator_key, genesis)
+        .start(config, node_key, validator_key, (), genesis)
         .unwrap();
 
     tendermint.wait().unwrap();

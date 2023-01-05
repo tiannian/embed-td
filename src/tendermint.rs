@@ -7,6 +7,7 @@ use std::{
 
 use async_abci::ServerXX;
 use rust_embed::RustEmbed;
+use serde::Serialize;
 use tempfile::tempdir;
 
 use crate::{crypto::Keypair, defined, model, App, Config, Error, Genesis, Result};
@@ -18,7 +19,7 @@ pub(crate) struct TendermintEmbed;
 
 /// Tendermint instance
 #[derive(Debug)]
-pub struct Tendermint<A> {
+pub struct Tendermint {
     #[cfg(not(feature = "__debug_tmp"))]
     work_dir: tempfile::TempDir,
 
@@ -26,11 +27,9 @@ pub struct Tendermint<A> {
     work_dir: PathBuf,
 
     tendermint_child: Option<Child>,
-
-    app: A,
 }
 
-impl<A> Tendermint<A> {
+impl Tendermint {
     pub fn get_binary_path(&self) -> PathBuf {
         let path = self.get_work_dir();
 
@@ -82,8 +81,8 @@ impl<A> Tendermint<A> {
     }
 }
 
-impl<A> Tendermint<A> {
-    pub fn new(app: A) -> Result<Self> {
+impl Tendermint {
+    pub fn new() -> Result<Self> {
         #[cfg(feature = "__debug_tmp")]
         let this = {
             let work_dir = tempdir()?.into_path();
@@ -91,7 +90,6 @@ impl<A> Tendermint<A> {
             Self {
                 work_dir,
                 tendermint_child: None,
-                app,
             }
         };
 
@@ -102,7 +100,6 @@ impl<A> Tendermint<A> {
             Self {
                 work_dir,
                 tendermint_child: None,
-                app,
             }
         };
 
@@ -143,19 +140,13 @@ impl<A> Tendermint<A> {
         Ok(String::from(s.trim()))
     }
 
-    /// Start tendermint
-    ///
-    /// Pass ABCI, Config, NodeKey, ValidatorKey, Genesis
-    pub fn start(
+    fn prepare_start(
         &mut self,
         config: Config,
         node_key: Keypair,
         validator_key: Keypair,
-        genesis: Genesis<A::AppState>,
-    ) -> Result<()>
-    where
-        A: App + Clone + 'static,
-    {
+        genesis: Genesis<impl Serialize>,
+    ) -> Result<()> {
         if config.data_dir.is_empty() {
             fs::create_dir_all(self.get_work_dir().join(defined::DATA_DIR))?;
         }
@@ -186,9 +177,6 @@ impl<A> Tendermint<A> {
         let cs = serde_json::to_string_pretty(&m)?;
         file.write_all(&cs.into_bytes())?;
 
-        let app = self.app.clone();
-        let app_path = self.get_app_path();
-
         let command = Command::new(self.get_binary_path())
             .arg("--home")
             .arg(self.get_work_dir())
@@ -196,6 +184,27 @@ impl<A> Tendermint<A> {
             .spawn()?;
 
         self.tendermint_child = Some(command);
+
+        Ok(())
+    }
+
+    /// Start tendermint
+    ///
+    /// Pass ABCI, Config, NodeKey, ValidatorKey, Genesis
+    pub fn start<A>(
+        &mut self,
+        config: Config,
+        node_key: Keypair,
+        validator_key: Keypair,
+        app: A,
+        genesis: Genesis<A::AppState>,
+    ) -> Result<()>
+    where
+        A: App + Clone + 'static,
+    {
+        self.prepare_start(config, node_key, validator_key, genesis)?;
+
+        let app_path = self.get_app_path();
 
         std::thread::spawn(move || {
             #[cfg(feature = "async-smol")]
@@ -221,6 +230,16 @@ impl<A> Tendermint<A> {
         });
 
         Ok(())
+    }
+
+    pub fn start_external_abci<A>(
+        &mut self,
+        config: Config,
+        node_key: Keypair,
+        validator_key: Keypair,
+        genesis: Genesis<impl Serialize>,
+    ) -> Result<()> {
+        self.prepare_start(config, node_key, validator_key, genesis)
     }
 
     pub fn stop(&mut self) -> Result<()> {
@@ -271,8 +290,8 @@ mod tests {
 
     #[test]
     fn test_version() {
-        let td = Tendermint::<()>::new(()).unwrap();
-        assert_eq!(&td.version().unwrap(), "0.34.21")
+        let td = Tendermint::new().unwrap();
+        assert_eq!(&td.version().unwrap(), "0.34.24")
     }
 
     #[derive(Debug, Serialize)]
@@ -291,10 +310,10 @@ mod tests {
 
         let config = Config::default();
 
-        let mut tendermint = Tendermint::<()>::new(()).unwrap();
+        let mut tendermint = Tendermint::new().unwrap();
 
         tendermint
-            .start(config, node_key, validator_key, genesis)
+            .start(config, node_key, validator_key, (), genesis)
             .unwrap();
 
         tendermint.stop().unwrap();
