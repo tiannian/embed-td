@@ -41,18 +41,18 @@ tokio = { version = "1", features = ["rt", "rt-multi-thread"], optional = true }
 smol = { version = "1.2.5", optional = true }
 
 [features]
-default = ["td_ver_0_34", "async-smol"]
+default = ["td-ver-0-34", "async-smol"]
 
 # Async runtime backend
 async-tokio = ["tokio" ,"async-abci/tokio-backend"]
 async-smol = ["smol", "async-abci/smol-backend"]
 
 # Tendermint version
-td_ver_0_34 = []
-td_ver_0_37 = []
+td-ver-0-34 = []
+td-ver-0-37 = []
 
 # How to get tendermint binary
-use_source_code = []
+use-source-code = []
 
 # Storage backend
 storage-goleveldb = []
@@ -66,7 +66,7 @@ __debug_tmp = []
 [build-dependencies]
 flate2 = "1.0.24"
 hex = "0.4.3"
-reqwest = { version = "0.11.11", features = ["blocking"] }
+reqwest = { version = "0.11.11", features = ["blocking", "rustls-tls"], default-features = false }
 sha2 = "0.10.6"
 tar = "0.4.38"
 
