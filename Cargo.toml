@@ -43,6 +43,8 @@ smol = { version = "1.2.5", optional = true }
 [features]
 default = ["td-ver-0-34", "async-smol"]
 
+external-abci = []
+
 # Async runtime backend
 async-tokio = ["tokio" ,"async-abci/tokio-backend"]
 async-smol = ["smol", "async-abci/smol-backend"]
