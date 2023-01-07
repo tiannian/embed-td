@@ -1,3 +1,5 @@
+use std::{thread::sleep, time::Duration};
+
 use embedded_td::{AlgorithmType, Config, Genesis, Keypair, Tendermint};
 use rand::thread_rng;
 
@@ -19,5 +21,7 @@ fn main() {
         .start(config, node_key, validator_key, (), genesis)
         .unwrap();
 
-    tendermint.wait().unwrap();
+    sleep(Duration::new(15, 0));
+
+    tendermint.stop().unwrap();
 }

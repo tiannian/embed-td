@@ -10,7 +10,7 @@ use rust_embed::RustEmbed;
 use serde::Serialize;
 use tempfile::tempdir;
 
-use crate::{crypto::Keypair, defined, model, App, Config, Error, Genesis, Result};
+use crate::{crypto::Keypair, defined, model, App, Config, Error, Genesis, Result, signal::stop_process};
 
 #[derive(RustEmbed)]
 #[folder = "$OUT_DIR/build"]
@@ -244,13 +244,12 @@ impl Tendermint {
     }
 
     pub fn stop(&mut self) -> Result<()> {
-        // TODO: Use sigint.
         let child = self
             .tendermint_child
-            .as_mut()
+            .as_ref()
             .ok_or(Error::NoTendermintStart)?;
 
-        child.kill()?;
+        stop_process(child)?;
 
         Ok(())
     }
