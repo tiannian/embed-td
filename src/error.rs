@@ -23,6 +23,10 @@ pub enum Error {
 
     #[error(transparent)]
     JsonError(#[from] serde_json::Error),
+
+    #[cfg(unix)]
+    #[error(transparent)]
+    NixErrno(#[from] nix::Error),
 }
 
 /// Result of error
