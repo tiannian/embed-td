@@ -19,6 +19,8 @@ pub use genesis::Genesis;
 mod app;
 pub use app::*;
 
+pub mod signal;
+
 pub(crate) mod model;
 
 pub(crate) mod defined;

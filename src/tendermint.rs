@@ -191,6 +191,7 @@ impl Tendermint {
     /// Start tendermint
     ///
     /// Pass ABCI, Config, NodeKey, ValidatorKey, Genesis
+    #[cfg(feature = "internal-abci")]
     pub fn start<A>(
         &mut self,
         config: Config,

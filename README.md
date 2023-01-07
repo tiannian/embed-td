@@ -63,6 +63,7 @@ You can use these features:
 - Version of tendermint
     - `td_ver_0_34`(default) tendermint 0.34
     - `td_ver_0_37` tendermint 0.37
+    - `td_ver_0_33` tendermint 0.37
 - Runtime of async
     - `smol-backend`(default).
     - `tokio-backend`
@@ -71,8 +72,8 @@ You can use these features:
 
 ## Supported platfrom
 
-1. linux, amd64
-2. linux, arm64
+1. linux, amd64 [tested]
+2. linux, arm64 [tested]
 3. linux, armv6
 4. macos, amd64
 5. macos, arm64

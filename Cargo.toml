@@ -33,15 +33,17 @@ ripemd = "0.1.2"
 curve25519-dalek-ng = "4.1.1"
 
 # abci interface
-async-abci = { version = "0.1.5", default-features = false, features = ["unix"] }
-tm-abci = "0.1.2"
+async-abci = { version = "0.1.5", default-features = false, optional = true }
+tm-abci = { version = "0.1.2", optional = true }
 
 # runtime
 tokio = { version = "1", features = ["rt", "rt-multi-thread"], optional = true }
 smol = { version = "1.2.5", optional = true }
 
 [features]
-default = ["td-ver-0-34", "async-smol"]
+default = ["td-ver-0-34", "async-smol", "internal-abci"]
+
+internal-abci = ["tm-abci", "async-abci"]
 
 # Async runtime backend
 async-tokio = ["tokio" ,"async-abci/tokio-backend"]
@@ -50,6 +52,7 @@ async-smol = ["smol", "async-abci/smol-backend"]
 # Tendermint version
 td-ver-0-34 = []
 td-ver-0-37 = []
+td-ver-0-33 = []
 
 # How to get tendermint binary
 use-source-code = []

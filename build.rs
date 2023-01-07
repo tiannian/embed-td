@@ -31,9 +31,10 @@ fn download_unpack_tgz(url: &str, out_dir: &str) {
     let body = reqwest::blocking::get(url).unwrap();
     let decoder = GzDecoder::new(body);
     let mut archive = Archive::new(decoder);
-    println!("ssss");
     archive.unpack(out_dir).unwrap();
 }
+
+
 
 fn main() {
     let dir = format!("{}/build", env::var("OUT_DIR").unwrap());
@@ -68,8 +69,10 @@ fn main() {
     };
 
     let version = {
-        if env::var("CARGO_FEATURE_TD_VER_0_34").unwrap() == "1" {
+        if env::var_os("CARGO_FEATURE_TD_VER_0_34").is_some() {
             "0.34.24"
+        } else if env::var_os("CARGO_FEATURE_TD_VER_0_33").is_some() {
+            "v0.33.9"
         } else {
             panic!("must use special version of tendermint")
         }
@@ -93,6 +96,8 @@ fn main() {
             }
         } else {
             let url = format!("https://github.com/tendermint/tendermint/releases/download/v{}/tendermint_{}_{}.tar.gz",version, version, platform);
+
+            println!("url: {}", url);
 
             if let Some(v) = check_has_tendermint(&dir, Some(version)) {
                 if !v {
