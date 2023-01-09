@@ -254,8 +254,6 @@ impl Tendermint {
 
         child.terminate()?;
 
-        child.wait()?;
-
         Ok(())
     }
 
@@ -278,6 +276,12 @@ impl Tendermint {
 
         child.wait()?;
 
+        Ok(())
+    }
+
+    pub fn cleanup(self) -> Result<()> {
+        #[cfg(not(feature = "__debug_tmp"))]
+        self.work_dir.close()?;
         Ok(())
     }
 }
@@ -322,5 +326,6 @@ mod tests {
             .unwrap();
 
         tendermint.stop().unwrap();
+        tendermint.wait().unwrap();
     }
 }

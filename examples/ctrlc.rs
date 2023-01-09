@@ -1,4 +1,4 @@
-use std::{thread::sleep, time::Duration};
+use std::{sync::{Arc, RwLock}, process::exit};
 
 use embedded_td::{AlgorithmType, Config, Genesis, Keypair, Tendermint};
 use rand::thread_rng;
@@ -21,7 +21,18 @@ fn main() {
         .start(config, node_key, validator_key, (), genesis)
         .unwrap();
 
-    sleep(Duration::new(15, 0));
+    let tendermint = Arc::new(RwLock::new(tendermint));
 
-    tendermint.stop().unwrap();
+    let td = tendermint.clone();
+
+    ctrlc::set_handler(move || {
+        println!("T!rig ctrl c");
+        let mut guard = td.write().unwrap();
+        guard.stop().unwrap();
+        guard.wait().unwrap();
+        exit(0);
+    })
+    .unwrap();
+
+    tendermint.write().unwrap().wait().unwrap();
 }
