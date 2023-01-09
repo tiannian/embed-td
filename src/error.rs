@@ -12,6 +12,9 @@ pub enum Error {
     #[error("No tendermint process stop")]
     NoTendermintStart,
 
+    #[error("No stdout stream")]
+    NoStdoutStream,
+
     #[error(transparent)]
     StdIoError(#[from] std::io::Error),
 
@@ -24,9 +27,8 @@ pub enum Error {
     #[error(transparent)]
     JsonError(#[from] serde_json::Error),
 
-    #[cfg(unix)]
     #[error(transparent)]
-    NixErrno(#[from] nix::Error),
+    PopenError(#[from] subprocess::PopenError),
 }
 
 /// Result of error

@@ -39,12 +39,7 @@ tm-abci = { version = "0.1.2", optional = true }
 # runtime
 tokio = { version = "1", features = ["rt", "rt-multi-thread"], optional = true }
 smol = { version = "1.2.5", optional = true }
-
-[target.'cfg(target_family = "unix")'.dependencies]
-nix = "0.26"
-
-[target.'cfg(target_family = "windows")'.dependencies]
-winapi = "0.3"
+subprocess = "0.2.9"
 
 [features]
 default = ["td-ver-0-34", "async-smol", "internal-abci"]
@@ -52,7 +47,7 @@ default = ["td-ver-0-34", "async-smol", "internal-abci"]
 internal-abci = ["tm-abci", "async-abci"]
 
 # Async runtime backend
-async-tokio = ["tokio" ,"async-abci/tokio-backend"]
+async-tokio = ["tokio", "async-abci/tokio-backend"]
 async-smol = ["smol", "async-abci/smol-backend"]
 
 # Tendermint version

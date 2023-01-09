@@ -5,6 +5,9 @@ pub use config::Config;
 mod tendermint;
 pub use tendermint::*;
 
+mod types;
+pub use types::*;
+
 mod error;
 pub use error::*;
 
@@ -18,8 +21,6 @@ pub use genesis::Genesis;
 
 mod app;
 pub use app::*;
-
-pub mod signal;
 
 pub(crate) mod model;
 

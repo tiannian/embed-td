@@ -2,15 +2,15 @@ use std::{
     fs::{self, File},
     io::Write,
     path::{Path, PathBuf},
-    process::{Child, Command},
 };
 
 use async_abci::ServerXX;
 use rust_embed::RustEmbed;
 use serde::Serialize;
+use subprocess::{Exec, Popen, PopenConfig};
 use tempfile::tempdir;
 
-use crate::{crypto::Keypair, defined, model, App, Config, Error, Genesis, Result, signal::stop_process};
+use crate::{crypto::Keypair, defined, model, App, Config, Error, Genesis, Result};
 
 #[derive(RustEmbed)]
 #[folder = "$OUT_DIR/build"]
@@ -26,7 +26,7 @@ pub struct Tendermint {
     #[cfg(feature = "__debug_tmp")]
     work_dir: PathBuf,
 
-    tendermint_child: Option<Child>,
+    tendermint_child: Option<Popen>,
 }
 
 impl Tendermint {
@@ -131,13 +131,12 @@ impl Tendermint {
     }
 
     pub fn version(&self) -> Result<String> {
-        let version = Command::new(self.get_binary_path())
+        let version = Exec::cmd(self.get_binary_path())
             .arg("version")
-            .output()?;
+            .capture()?
+            .stdout_str();
 
-        let s = String::from_utf8(version.stdout)?;
-
-        Ok(String::from(s.trim()))
+        Ok(String::from(version.trim()))
     }
 
     fn prepare_start(
@@ -177,13 +176,17 @@ impl Tendermint {
         let cs = serde_json::to_string_pretty(&m)?;
         file.write_all(&cs.into_bytes())?;
 
-        let command = Command::new(self.get_binary_path())
-            .arg("--home")
-            .arg(self.get_work_dir())
-            .arg("node")
-            .spawn()?;
+        let p = Popen::create(
+            &[
+                self.get_binary_path().as_os_str(),
+                "--home".as_ref(),
+                self.get_work_dir().as_os_str(),
+                "node".as_ref(),
+            ],
+            PopenConfig::default(),
+        )?;
 
-        self.tendermint_child = Some(command);
+        self.tendermint_child = Some(p);
 
         Ok(())
     }
@@ -246,10 +249,12 @@ impl Tendermint {
     pub fn stop(&mut self) -> Result<()> {
         let child = self
             .tendermint_child
-            .as_ref()
+            .as_mut()
             .ok_or(Error::NoTendermintStart)?;
 
-        stop_process(child)?;
+        child.terminate()?;
+
+        child.wait()?;
 
         Ok(())
     }

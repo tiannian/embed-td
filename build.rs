@@ -34,8 +34,6 @@ fn download_unpack_tgz(url: &str, out_dir: &str) {
     archive.unpack(out_dir).unwrap();
 }
 
-
-
 fn main() {
     let dir = format!("{}/build", env::var("OUT_DIR").unwrap());
     if env::var("DOCS_RS").is_ok() {
@@ -96,8 +94,6 @@ fn main() {
             }
         } else {
             let url = format!("https://github.com/tendermint/tendermint/releases/download/v{}/tendermint_{}_{}.tar.gz",version, version, platform);
-
-            println!("url: {}", url);
 
             if let Some(v) = check_has_tendermint(&dir, Some(version)) {
                 if !v {
