@@ -70,9 +70,14 @@ __debug_tmp = []
 [build-dependencies]
 flate2 = "1.0.24"
 hex = "0.4.3"
-reqwest = { version = "0.11.11", features = ["blocking", "rustls-tls", "socks"], default-features = false }
 sha2 = "0.10.6"
 tar = "0.4.38"
+
+[target.'cfg(target_os = "linux")'.build-dependencies]
+reqwest = { version = "0.11.11", features = ["blocking", "rustls-tls", "socks"], default-features = false }
+
+[target.'cfg(not(target_os = "linux"))'.build-dependencies]
+reqwest = { version = "0.11.11", features = ["blocking", "socks"], default-features = false }
 
 [dev-dependencies]
 rand = "0.8.5"
