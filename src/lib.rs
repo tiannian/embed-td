@@ -19,9 +19,6 @@ pub mod genesis;
 #[doc(inline)]
 pub use genesis::Genesis;
 
-mod app;
-pub use app::*;
-
 pub(crate) mod model;
 
 pub(crate) mod defined;

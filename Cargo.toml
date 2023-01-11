@@ -9,7 +9,6 @@ license = "LGPL-3.0"
 
 [dependencies]
 rust-embed = { version = "6.4.1", features = ["interpolate-folder-path", "include-exclude", "include-flate"] }
-tempfile = "3.3.0"
 thiserror = "1.0.35"
 
 time = { version = "0.3.14", features = ["serde"] }
@@ -32,23 +31,11 @@ ripemd = "0.1.2"
 # ed25519 & sr25519
 curve25519-dalek-ng = "4.1.1"
 
-# abci interface
-async-abci = { version = "0.1.5", default-features = false, optional = true }
-tm-abci = { version = "0.1.2", optional = true }
-
-# runtime
-tokio = { version = "1", features = ["rt", "rt-multi-thread"], optional = true }
-smol = { version = "1.2.5", optional = true }
 subprocess = "0.2.9"
+tempfile = "3.3.0"
 
 [features]
-default = ["td-ver-0-34", "async-smol", "internal-abci"]
-
-internal-abci = ["tm-abci", "async-abci"]
-
-# Async runtime backend
-async-tokio = ["tokio", "async-abci/tokio-backend"]
-async-smol = ["smol", "async-abci/smol-backend"]
+default = ["td-ver-0-34"]
 
 # Tendermint version
 td-ver-0-34 = []
@@ -64,8 +51,6 @@ storage-cleveldb = []
 storage-badgerdb = []
 storage-rocksdb = []
 storage-boltdb = []
-
-__debug_tmp = []
 
 [build-dependencies]
 flate2 = "1.0.24"
@@ -85,3 +70,8 @@ serde_json = "1.0.85"
 env_logger = "0.9.1"
 ctrlc = { version = "3.2.4", features = ["termination"] }
 
+# abci interface
+async-abci = { version = "0.1.5" }
+tm-abci = { version = "0.1.2" }
+
+smol = { version = "1.2.5" }

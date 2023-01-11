@@ -1,5 +1,6 @@
-use std::{sync::{Arc, RwLock}, process::exit};
+use std::{sync::mpsc::channel, thread};
 
+use async_abci::ServerXX;
 use embedded_td::{AlgorithmType, Config, Genesis, Keypair, Tendermint};
 use rand::thread_rng;
 
@@ -18,21 +19,26 @@ fn main() {
     let mut tendermint = Tendermint::new().unwrap();
 
     tendermint
-        .start(config, node_key, validator_key, (), genesis)
+        .start(config, node_key, validator_key, genesis)
         .unwrap();
 
-    let tendermint = Arc::new(RwLock::new(tendermint));
+    let path = tendermint.get_app_path();
 
-    let td = tendermint.clone();
+    thread::spawn(move || {
+        smol::block_on(async move {
+            let s = ServerXX::new(()).bind_unix(path).await.unwrap();
+            s.run().await.unwrap();
+        });
+    });
+
+    let (tx, rx) = channel();
 
     ctrlc::set_handler(move || {
-        println!("T!rig ctrl c");
-        let mut guard = td.write().unwrap();
-        guard.stop().unwrap();
-        guard.wait().unwrap();
-        exit(0);
+        tx.send(()).unwrap();
     })
     .unwrap();
 
-    tendermint.write().unwrap().wait().unwrap();
+    rx.recv().unwrap();
+    tendermint.stop().unwrap();
+    tendermint.wait().unwrap();
 }

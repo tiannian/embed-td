@@ -1,16 +1,16 @@
 use std::{
     fs::{self, File},
     io::Write,
+    mem,
     path::{Path, PathBuf},
 };
 
-use async_abci::ServerXX;
 use rust_embed::RustEmbed;
 use serde::Serialize;
 use subprocess::{Exec, Popen, PopenConfig};
 use tempfile::tempdir;
 
-use crate::{crypto::Keypair, defined, model, App, Config, Error, Genesis, Result};
+use crate::{crypto::Keypair, defined, model, Config, Error, Genesis, Result};
 
 #[derive(RustEmbed)]
 #[folder = "$OUT_DIR/build"]
@@ -20,13 +20,38 @@ pub(crate) struct TendermintEmbed;
 /// Tendermint instance
 #[derive(Debug)]
 pub struct Tendermint {
-    #[cfg(not(feature = "__debug_tmp"))]
-    work_dir: tempfile::TempDir,
-
-    #[cfg(feature = "__debug_tmp")]
     work_dir: PathBuf,
 
     tendermint_child: Option<Popen>,
+
+    cleanup: bool,
+}
+
+impl Drop for Tendermint {
+    fn drop(&mut self) {
+        if self.cleanup {
+            if let Err(e) = self.cleanup() {
+                log::error!("Failed to cleanup, please do it manually. {:?}", e);
+            }
+        }
+    }
+}
+
+impl Tendermint {
+    pub fn cleanup(&mut self) -> Result<()> {
+        let c = mem::take(&mut self.tendermint_child);
+
+        log::info!("Cleaning resources...");
+
+        if let Some(mut child) = c {
+            child.terminate()?;
+            child.wait()?;
+        }
+
+        fs::remove_dir_all(self.get_work_dir())?;
+
+        Ok(())
+    }
 }
 
 impl Tendermint {
@@ -83,23 +108,13 @@ impl Tendermint {
 
 impl Tendermint {
     pub fn new() -> Result<Self> {
-        #[cfg(feature = "__debug_tmp")]
         let this = {
             let work_dir = tempdir()?.into_path();
-            log::info!("Config dir is: {:?}", work_dir.to_str());
-            Self {
-                work_dir,
-                tendermint_child: None,
-            }
-        };
-
-        #[cfg(not(feature = "__debug_tmp"))]
-        let this = {
-            let work_dir = tempdir()?;
 
             Self {
                 work_dir,
                 tendermint_child: None,
+                cleanup: true,
             }
         };
 
@@ -191,52 +206,7 @@ impl Tendermint {
         Ok(())
     }
 
-    /// Start tendermint
-    ///
-    /// Pass ABCI, Config, NodeKey, ValidatorKey, Genesis
-    #[cfg(feature = "internal-abci")]
-    pub fn start<A>(
-        &mut self,
-        config: Config,
-        node_key: Keypair,
-        validator_key: Keypair,
-        app: A,
-        genesis: Genesis<A::AppState>,
-    ) -> Result<()>
-    where
-        A: App + Clone + 'static,
-    {
-        self.prepare_start(config, node_key, validator_key, genesis)?;
-
-        let app_path = self.get_app_path();
-
-        std::thread::spawn(move || {
-            #[cfg(feature = "async-smol")]
-            smol::block_on(async move {
-                ServerXX::new(app)
-                    .bind_unix(app_path)
-                    .await
-                    .unwrap()
-                    .run()
-                    .await
-                    .unwrap();
-            });
-            #[cfg(feature = "async-tokio")]
-            tokio::block_on(async move {
-                ServerXX::new(app)
-                    .bind_unix(app_path)
-                    .await
-                    .unwrap()
-                    .run()
-                    .await
-                    .unwrap();
-            });
-        });
-
-        Ok(())
-    }
-
-    pub fn start_external_abci<A>(
+    pub fn start(
         &mut self,
         config: Config,
         node_key: Keypair,
@@ -278,12 +248,6 @@ impl Tendermint {
 
         Ok(())
     }
-
-    pub fn cleanup(self) -> Result<()> {
-        #[cfg(not(feature = "__debug_tmp"))]
-        self.work_dir.close()?;
-        Ok(())
-    }
 }
 
 #[cfg(test)]
@@ -322,7 +286,7 @@ mod tests {
         let mut tendermint = Tendermint::new().unwrap();
 
         tendermint
-            .start(config, node_key, validator_key, (), genesis)
+            .start(config, node_key, validator_key, genesis)
             .unwrap();
 
         tendermint.stop().unwrap();
